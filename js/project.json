@@ -1,0 +1,16 @@
+{
+  "name": "Cat City Prototype",
+  "version": "0.2",
+  "entry": "index.html",
+  "sprites": {
+    "characters": [
+      "cat_front.png",
+      "cat_back.png",
+      "cat_right.png",
+      "cat_left.png"
+    ],
+    "tiles": [
+      "background.png"
+    ]
+  }
+}

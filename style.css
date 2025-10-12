@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(#111, #000);
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  width: 100vw;
+  height: 100vh;
+}
