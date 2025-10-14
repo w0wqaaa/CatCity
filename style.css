@@ -1,3 +1,4 @@
+/* === Общий стиль === */
 body {
   margin: 0;
   overflow: hidden;
@@ -10,4 +11,188 @@ canvas {
   image-rendering: pixelated;
   width: 100vw;
   height: 100vh;
+}
+
+/* === Верхнее меню === */
+#ui {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  font-family: monospace;
+}
+
+#questsButton {
+  background: #333;
+  color: #eee;
+  border: 1px solid #666;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: monospace;
+  transition: background 0.2s;
+}
+
+#questsButton:hover {
+  background: #444;
+}
+
+/* === Панель квестов === */
+#questsPanel {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #666;
+  border-radius: 6px;
+  padding: 15px 20px;
+  color: #fff;
+  width: 280px;
+  text-align: left;
+  display: none;
+  z-index: 12;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+#questsPanel.visible {
+  display: block;
+}
+
+#questsPanel h3 {
+  margin-top: 0;
+  text-align: center;
+  font-size: 16px;
+  color: #ffda75;
+}
+
+#questsPanel ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+#questsPanel li {
+  padding: 4px 0;
+  border-bottom: 1px dashed #666;
+  font-size: 14px;
+}
+
+/* === Диалоговое окно === */
+#dialogBox {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #666;
+  padding: 20px 25px;
+  color: #fff;
+  border-radius: 8px;
+  width: 400px;
+  text-align: center;
+  font-family: monospace;
+  z-index: 15;
+  box-shadow: 0 0 12px rgba(0,0,0,0.6);
+}
+
+#dialogText {
+  font-size: 15px;
+  line-height: 1.5em;
+  margin-bottom: 12px;
+}
+
+#nextDialog {
+  background: #444;
+  color: #fff;
+  border: 1px solid #777;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: monospace;
+  transition: background 0.2s;
+}
+
+#nextDialog:hover {
+  background: #555;
+}
+
+/* === Подсказка E === */
+#hintE {
+  position: fixed;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  border: 1px solid #666;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: monospace;
+  z-index: 15;
+  font-size: 14px;
+  animation: fadeHint 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes fadeHint {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+#hintE.hidden {
+  display: none;
+}
+
+/* === Общие элементы === */
+button {
+  font-family: monospace;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+/* === уведомление о событиях === */
+#notification {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 20, 20, 0.9);
+  color: #fff;
+  border: 1px solid #777;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-family: monospace;
+  font-size: 16px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.8s;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+#hintE {
+  position: fixed;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  border: 1px solid #666;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: monospace;
+  z-index: 15;
+  font-size: 14px;
+  animation: hintPulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes hintPulse {
+  from { opacity: 0.6; transform: translateX(-50%) scale(0.97); }
+  to   { opacity: 1;   transform: translateX(-50%) scale(1.03); }
+}
+
+#hintE.hidden {
+  display: none;
 }

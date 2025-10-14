@@ -1,0 +1,10 @@
+{
+  "id": "north_street",
+  "name": "Осмотреть северную улицу",
+  "giver": "guard",
+  "targetArea": {
+    "x": 700,
+    "y": 150,
+    "radius": 100
+  }
+}

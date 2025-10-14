@@ -1,0 +1,12 @@
+{
+  "id": "guard",
+  "sprite": "sprites/characters/guard/cat_guard.png",
+  "position": {
+    "x": 500,
+    "y": 900
+  },
+  "dialog": "guard_intro",
+  "quests": [
+    "north_street"
+  ]
+}
