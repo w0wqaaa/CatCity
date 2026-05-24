@@ -1,14 +1,12 @@
-import { loadAssets } from "./mapLoader.js";
-import { collisionMap } from "./collisionMap.js";
-import { NPCGuard } from "./npcGuard.js";
+import { loadAssets } from "./assetLoader.js";
+import { ASSET_PATHS, CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js";
+import { NPCGuard } from "../entities/NPCGuard.js";
+import { collisionMap } from "../maps/cityCollisionMap.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-canvas.width = 1536;
-canvas.height = 1024;
-
-const TILE_SIZE = 8;
-const INTERACT_RADIUS = 110;
+canvas.width = CANVAS.width;
+canvas.height = CANVAS.height;
 
 let assets, cat, guard;
 let keys = {};
@@ -62,7 +60,7 @@ async function startGame() {
   guard = new NPCGuard(
     mid.x * TILE_SIZE,
     mid.y * TILE_SIZE,
-    "sprites/characters/guard/cat_guard.png",
+    ASSET_PATHS.characters.guard.sprite,
     TILE_SIZE,
     collisionMap,
     biggestRoad

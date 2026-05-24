@@ -1,0 +1,7 @@
+{
+  "id": "guard",
+  "name": "Guard",
+  "sprite": "assets/characters/guard/cat_guard.png",
+  "dialog": "guard_intro",
+  "quests": ["northStreet"]
+}

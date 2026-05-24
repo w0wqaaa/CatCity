@@ -1,0 +1,9 @@
+{
+  "id": "northStreet",
+  "name": "Inspect North Street",
+  "giver": "guard",
+  "target": {
+    "location": "city",
+    "yLessThan": 200
+  }
+}

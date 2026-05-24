@@ -1,0 +1,8 @@
+{
+  "id": "city",
+  "name": "Cat City",
+  "map": "assets/maps/city/background.png",
+  "collisionMap": "src/maps/cityCollisionMap.js",
+  "characters": ["guard"],
+  "quests": ["northStreet"]
+}
