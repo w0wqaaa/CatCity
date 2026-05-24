@@ -25,7 +25,8 @@ canvas {
 }
 
 #questsButton,
-#inventoryButton {
+#inventoryButton,
+#logoutButton {
   background: #333;
   color: #eee;
   border: 1px solid #666;
@@ -37,7 +38,8 @@ canvas {
 }
 
 #questsButton:hover,
-#inventoryButton:hover {
+#inventoryButton:hover,
+#logoutButton:hover {
   background: #444;
 }
 
@@ -153,6 +155,77 @@ canvas {
 
 #hintE.hidden {
   display: none;
+}
+
+#loginScreen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 10, 9, 0.82);
+  z-index: 30;
+  font-family: monospace;
+}
+
+.login-card {
+  width: min(340px, calc(100vw - 36px));
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid #6d6d6d;
+  border-radius: 8px;
+  color: #f4f4f4;
+  padding: 22px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+.login-card h1 {
+  margin: 0 0 16px;
+  color: #ffda75;
+  font-size: 28px;
+  text-align: center;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.login-card input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #101010;
+  color: #fff;
+  border: 1px solid #777;
+  border-radius: 4px;
+  padding: 9px 10px;
+  font-family: monospace;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.login-card button {
+  width: 100%;
+  background: #3a3a3a;
+  color: #fff;
+  border: 1px solid #777;
+  border-radius: 4px;
+  padding: 9px 12px;
+}
+
+#loginMessage {
+  margin: 12px 0 0;
+  color: #d0d0d0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#playerBadge {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffda75;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-right: 6px;
 }
 
 /* === Общие элементы === */

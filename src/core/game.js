@@ -3,6 +3,8 @@ import { loadGameContent } from "./dataLoader.js";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js";
 import { NPCGuard } from "../entities/NPCGuard.js";
 
+const SAVE_VERSION = 1;
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 canvas.width = CANVAS.width;
@@ -30,7 +32,17 @@ let highlightPulse = 0;
 let showHint = false;
 let hintPulse = 0;
 let isTransitioning = false;
+let currentUser = null;
+let currentLocationId = "city";
+let loopStarted = false;
+let lastAutosaveAt = 0;
 
+const loginScreen = document.getElementById("loginScreen");
+const loginForm = document.getElementById("loginForm");
+const usernameInput = document.getElementById("usernameInput");
+const loginMessage = document.getElementById("loginMessage");
+const ui = document.getElementById("ui");
+const playerBadge = document.getElementById("playerBadge");
 const questsButton = document.getElementById("questsButton");
 const questsPanel = document.getElementById("questsPanel");
 const questsList = document.getElementById("questsList");
@@ -39,6 +51,7 @@ const inventoryButton = document.getElementById("inventoryButton");
 const inventoryPanel = document.getElementById("inventoryPanel");
 const inventoryList = document.getElementById("inventoryList");
 const closeInventory = document.getElementById("closeInventory");
+const logoutButton = document.getElementById("logoutButton");
 const dialogBox = document.getElementById("dialogBox");
 const dialogText = document.getElementById("dialogText");
 const nextDialog = document.getElementById("nextDialog");
@@ -50,11 +63,25 @@ document.body.appendChild(notification);
 
 async function startGame() {
   playerFrames = await loadPlayerFrames();
-  await switchLocation("city");
+  setupEventListeners();
+  initLogin();
+}
 
+function setupEventListeners() {
   window.addEventListener("keydown", handleKey);
   window.addEventListener("keyup", (e) => (keys[e.key] = false));
+  window.addEventListener("beforeunload", saveProgress);
   nextDialog.addEventListener("click", nextDialogLine);
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = usernameInput.value.trim();
+    if (!username) {
+      loginMessage.textContent = "Введите имя игрока.";
+      return;
+    }
+    await login(username);
+  });
 
   questsButton.addEventListener("click", () => {
     questsPanel.classList.toggle("visible");
@@ -80,11 +107,53 @@ async function startGame() {
     });
   }
 
-  loop();
+  logoutButton.addEventListener("click", logout);
 }
 
-async function switchLocation(locationId, spawnOverride = null) {
+function initLogin() {
+  const lastUser = localStorage.getItem("catCity.lastUser");
+  if (lastUser) {
+    usernameInput.value = lastUser;
+    loginMessage.textContent = `Последний игрок: ${lastUser}. Нажмите "Войти в игру", чтобы продолжить.`;
+  }
+  usernameInput.focus();
+}
+
+async function login(username) {
+  currentUser = username;
+  localStorage.setItem("catCity.lastUser", username);
+  loadProgress();
+
+  loginScreen.classList.add("hidden");
+  ui.classList.remove("hidden");
+  playerBadge.textContent = `Игрок: ${username}`;
+  updateQuestList();
+  updateInventoryList();
+
+  await switchLocation(currentLocationId, getSavedSpawn(), { skipSave: true });
+  showNotification(`Добро пожаловать, ${username}`);
+
+  if (!loopStarted) {
+    loopStarted = true;
+    loop();
+  }
+}
+
+function logout() {
+  saveProgress();
+  currentUser = null;
+  questsPanel.classList.remove("visible");
+  inventoryPanel.classList.remove("visible");
+  dialogBox.classList.add("hidden");
+  ui.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+  loginMessage.textContent = "Прогресс сохранён. Можно войти другим именем.";
+  usernameInput.focus();
+}
+
+async function switchLocation(locationId, spawnOverride = null, options = {}) {
   isTransitioning = true;
+  currentLocationId = locationId;
   content = await loadGameContent(locationId);
   collisionMap = content.collisionMap;
   mapBackground = await loadImage(content.location.map);
@@ -105,9 +174,15 @@ async function switchLocation(locationId, spawnOverride = null) {
   };
 
   cat = cat ? { ...cat, x: nextCat.x, y: nextCat.y, moving: false } : nextCat;
+  if (spawnOverride?.direction) {
+    cat.direction = spawnOverride.direction;
+  }
   npcs = createNpcs();
   objects = createObjects();
   showNotification(content.location.name);
+  if (!options.skipSave) {
+    saveProgress();
+  }
   setTimeout(() => {
     isTransitioning = false;
   }, 250);
@@ -124,7 +199,73 @@ function getSpawnPoint(centerTileX, centerTileY, spawnOverride) {
   return findClosestRoad(centerTileX, centerTileY);
 }
 
+function getSaveKey(username = currentUser) {
+  return `catCity.save.${username.toLowerCase()}`;
+}
+
+function getSavedSpawn() {
+  const save = readSavedProgress();
+  return save?.player?.x !== undefined && save?.player?.y !== undefined
+    ? { x: save.player.x, y: save.player.y, direction: save.player.direction }
+    : null;
+}
+
+function readSavedProgress() {
+  if (!currentUser) {
+    return null;
+  }
+
+  try {
+    const raw = localStorage.getItem(getSaveKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadProgress() {
+  const save = readSavedProgress();
+  currentLocationId = save?.locationId || "city";
+  questStates = save?.questStates || {};
+  questLog = save?.questLog || [];
+  inventory = save?.inventory || {};
+}
+
+function saveProgress() {
+  if (!currentUser || !cat) {
+    return;
+  }
+
+  const save = {
+    version: SAVE_VERSION,
+    username: currentUser,
+    locationId: content?.location?.id || currentLocationId,
+    player: {
+      x: Math.round(cat.x),
+      y: Math.round(cat.y),
+      direction: cat.direction,
+    },
+    questStates,
+    questLog,
+    inventory,
+    savedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(getSaveKey(), JSON.stringify(save));
+}
+
+function autosaveProgress() {
+  const now = Date.now();
+  if (now - lastAutosaveAt < 1200) {
+    return;
+  }
+  lastAutosaveAt = now;
+  saveProgress();
+}
+
 function handleKey(e) {
+  if (!currentUser || !cat) {
+    return;
+  }
   keys[e.key] = true;
   const isE = e.code === "KeyE" || e.key === "e" || e.key === "E";
   if (isE && !inDialog) {
@@ -239,6 +380,7 @@ function startQuest(questId) {
   });
   updateQuestList();
   showNotification(quest.notifications.started);
+  saveProgress();
 }
 
 function completeQuest(questId) {
@@ -253,6 +395,7 @@ function completeQuest(questId) {
   questStates[questId] = "completed";
   updateQuestStatus(questId, quest.statusLabels.completed);
   showNotification(quest.notifications.completed);
+  saveProgress();
 }
 
 function finishQuest(questId) {
@@ -273,6 +416,7 @@ function finishQuest(questId) {
   questStates[questId] = "delivered";
   updateQuestStatus(questId, quest.statusLabels.delivered);
   showNotification(quest.notifications.delivered);
+  saveProgress();
 }
 
 function updateQuestStatus(questId, status) {
@@ -305,6 +449,7 @@ function addItem(itemId, quantity = 1) {
   };
   updateInventoryList();
   showNotification(`Получено: ${item.name}`);
+  saveProgress();
 }
 
 function consumeItems(items) {
@@ -320,6 +465,7 @@ function consumeItems(items) {
     }
   });
   updateInventoryList();
+  saveProgress();
 }
 
 function hasItem(itemId, quantity = 1) {
@@ -553,6 +699,10 @@ function loop() {
 }
 
 function update() {
+  if (!cat || !currentUser) {
+    return;
+  }
+
   if (inDialog) {
     return;
   }
@@ -589,6 +739,7 @@ function update() {
     if (cat.tick % 10 === 0) {
       cat.frame = (cat.frame + 1) % 3;
     }
+    autosaveProgress();
   } else {
     cat.frame = 0;
   }
@@ -606,6 +757,10 @@ function update() {
 }
 
 function draw() {
+  if (!cat || !mapBackground) {
+    return;
+  }
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mapBackground, 0, 0);
   drawObjectMarkers();

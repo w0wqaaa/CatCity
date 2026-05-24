@@ -8,9 +8,21 @@
 <body>
   <canvas id="game"></canvas>
 
-  <div id="ui">
+  <div id="loginScreen">
+    <form id="loginForm" class="login-card">
+      <h1>Cat City</h1>
+      <label for="usernameInput">Имя игрока</label>
+      <input id="usernameInput" name="username" type="text" maxlength="24" autocomplete="username" required>
+      <button type="submit">Войти в игру</button>
+      <p id="loginMessage">Прогресс сохраняется локально для каждого имени.</p>
+    </form>
+  </div>
+
+  <div id="ui" class="hidden">
+    <span id="playerBadge"></span>
     <button id="questsButton">Квесты</button>
     <button id="inventoryButton">Инвентарь</button>
+    <button id="logoutButton">Выйти</button>
 
     <div id="questsPanel" class="hidden">
       <h3>Активные квесты</h3>
