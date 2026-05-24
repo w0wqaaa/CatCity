@@ -1,7 +1,9 @@
 {
   "id": "guard",
-  "name": "Guard",
+  "name": "Страж",
+  "type": "guard",
   "sprite": "assets/characters/guard/cat_guard.png",
+  "positionStrategy": "largestRoadCenter",
   "dialog": "guard_intro",
   "quests": ["northStreet"]
 }

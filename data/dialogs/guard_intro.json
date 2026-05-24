@@ -1,9 +1,36 @@
 {
   "id": "guard_intro",
   "speaker": "guard",
-  "lines": [
-    "Guard: Hello, traveler.",
-    "Guard: Patrols noticed strange things on the northern street.",
-    "Guard: Check it and come back when you are done."
-  ]
+  "stages": {
+    "none": {
+      "lines": [
+        "Страж: Привет, путник.",
+        "Страж: Дозорные заметили странности на северной улице.",
+        "Страж: Осмотри её и возвращайся, когда закончишь."
+      ],
+      "after": {
+        "startQuest": "northStreet"
+      }
+    },
+    "active": {
+      "lines": [
+        "Страж: Осмотри северную улицу и возвращайся."
+      ]
+    },
+    "completed": {
+      "lines": [
+        "Страж: Рад снова тебя видеть.",
+        "Страж: Отличная работа. Город в безопасности.",
+        "Страж: Твоя награда — уважение жителей Cat City."
+      ],
+      "after": {
+        "finishQuest": "northStreet"
+      }
+    },
+    "delivered": {
+      "lines": [
+        "Страж: Спасибо за помощь городу."
+      ]
+    }
+  }
 }

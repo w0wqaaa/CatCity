@@ -1,9 +1,24 @@
 {
   "id": "northStreet",
-  "name": "Inspect North Street",
+  "name": "Осмотреть северную улицу",
   "giver": "guard",
-  "target": {
-    "location": "city",
-    "yLessThan": 200
+  "statusLabels": {
+    "active": "Активен",
+    "completed": "Выполнен, вернитесь к стражу",
+    "delivered": "Завершён"
+  },
+  "notifications": {
+    "started": "Новый квест: осмотреть северную улицу",
+    "completed": "Квест выполнен! Вернитесь к стражу.",
+    "delivered": "Квест завершён! Город благодарен."
+  },
+  "completion": {
+    "type": "playerYLessThan",
+    "value": 200
+  },
+  "highlight": {
+    "x": 768,
+    "y": 120,
+    "radius": 300
   }
 }

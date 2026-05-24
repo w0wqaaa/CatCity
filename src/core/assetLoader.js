@@ -17,19 +17,11 @@ export async function loadAssets() {
     return frames;
   };
 
-  const assets = {
-    // 👉 если фон в characters/
+  return {
     background: await loadImage(ASSET_PATHS.maps.city.background),
-
-    // если фон в tiles/, то поменяй строку выше на:
-    // background: await loadImage("sprites/tiles/background.png"),
-
     down: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_down`),
     up: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_up`),
     right: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_right`),
     left: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_left`),
   };
-
-  console.log("✅ Все ассеты загружены:", Object.keys(assets));
-  return assets;
 }
