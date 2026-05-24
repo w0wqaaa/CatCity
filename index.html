@@ -8,23 +8,21 @@
 <body>
   <canvas id="game"></canvas>
 
-  <!-- Меню квестов -->
   <div id="ui">
-    <button id="questsButton">📜 Квесты</button>
+    <button id="questsButton">Квесты</button>
     <div id="questsPanel" class="hidden">
       <h3>Активные квесты</h3>
       <ul id="questsList"></ul>
       <button id="closeQuests">Закрыть</button>
     </div>
-    <div id="hintE" class="hidden">Нажмите E — поговорить</div>
+    <div id="hintE" class="hidden">Нажмите E, чтобы поговорить</div>
   </div>
 
-  <!-- Диалог -->
   <div id="dialogBox" class="hidden">
     <p id="dialogText"></p>
     <button id="nextDialog">Далее</button>
   </div>
 
-  <script type="module" src="js/mapLogic.js"></script>
+  <script type="module" src="src/core/game.js"></script>
 </body>
 </html>

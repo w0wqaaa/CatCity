@@ -1,0 +1,19 @@
+{
+  "id": "city",
+  "name": "Cat City",
+  "map": "assets/maps/city/background.png",
+  "collisionMap": "src/maps/cityCollisionMap.js",
+  "characters": ["guard"],
+  "quests": ["northStreet"],
+  "spawn": {
+    "strategy": "closestRoadToCenter"
+  },
+  "exits": [
+    {
+      "id": "south_gate",
+      "to": "south_outskirts",
+      "area": { "x": 700, "y": 944, "width": 140, "height": 80 },
+      "spawn": { "x": 768, "y": 112 }
+    }
+  ]
+}

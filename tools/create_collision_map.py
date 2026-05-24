@@ -1,17 +1,26 @@
-from PIL import Image
+from pathlib import Path
 import json
 
-input_file = "sprites/tiles/background.png"
-output_file = "collision_map.json"
-road_color = (124, 115, 89)  # цвет дороги (#7C7359)
+from PIL import Image
 
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_INPUT = ROOT / "assets" / "maps" / "city" / "background.png"
+DEFAULT_OUTPUT = ROOT / "src" / "maps" / "cityCollisionMap.js"
+
+ROAD_COLOR = (124, 115, 89)
 TILE_SIZE = 32
+
 
 def is_road(pixel):
     r, g, b = pixel[:3]
-    return abs(r - road_color[0]) < 15 and abs(g - road_color[1]) < 15 and abs(b - road_color[2]) < 15
+    return (
+        abs(r - ROAD_COLOR[0]) < 15
+        and abs(g - ROAD_COLOR[1]) < 15
+        and abs(b - ROAD_COLOR[2]) < 15
+    )
 
-def generate_collision_map():
+
+def generate_collision_map(input_file=DEFAULT_INPUT, output_file=DEFAULT_OUTPUT):
     img = Image.open(input_file).convert("RGB")
     width, height = img.size
     tiles_x = width // TILE_SIZE
@@ -26,15 +35,19 @@ def generate_collision_map():
                 for dy in range(TILE_SIZE)
                 for dx in range(TILE_SIZE)
             ]
+            collision[y][x] = 1
             if sum(is_road(p) for p in pixels) > (TILE_SIZE * TILE_SIZE * 0.3):
-                collision[y][x] = 1  # можно ходить
-            else:
-                collision[y][x] = 0  # стена / трава / туман
+                collision[y][x] = 0
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(collision, f)
+    output_file = Path(output_file)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(
+        f"export const collisionMap = {json.dumps(collision)};\n",
+        encoding="utf-8",
+    )
 
-    print(f"✅ Карта коллизий сохранена: {output_file}")
+    print(f"Collision map saved: {output_file}")
+
 
 if __name__ == "__main__":
     generate_collision_map()
