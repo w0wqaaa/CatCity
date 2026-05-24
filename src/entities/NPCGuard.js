@@ -1,23 +1,12 @@
-// npcGuard.js
-export class NPCGuard {
-  constructor(x, y, spritePath, tileSize, collisionMap, roadCluster) {
-    this.sprite = new Image();
-    this.sprite.src = spritePath;
+import { NPC } from "./NPC.js";
 
-    this.tileSize = tileSize;
+export class NPCGuard extends NPC {
+  constructor(x, y, spritePath, tileSize, collisionMap, roadCluster) {
+    super(x, y, spritePath, tileSize);
+
     this.collisionMap = collisionMap;
     this.roadCluster = roadCluster;
 
-    this.tileX = Math.round(x / tileSize);
-    this.tileY = Math.round(y / tileSize);
-    this.x = this.tileX * tileSize + tileSize / 2;
-    this.y = this.tileY * tileSize + tileSize / 2;
-
-    this.width = 64;
-    this.height = 64;
-    this.speed = 1;
-
-    this.direction = { x: 1, y: 0 };
     this.state = "walk";        // walk | wait
     this.stateStart = Date.now();
     this.walkDuration = 10000;  // 10 секунд идёт
@@ -93,29 +82,5 @@ export class NPCGuard {
       this.state = "wait";
       this.stateStart = Date.now();
     }
-  }
-
-  draw(ctx) {
-    const movingRight = this.direction.x > 0;
-    ctx.save();
-    if (movingRight) {
-      ctx.scale(-1, 1);
-      ctx.drawImage(
-        this.sprite,
-        -this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
-    } else {
-      ctx.drawImage(
-        this.sprite,
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-      );
-    }
-    ctx.restore();
   }
 }
