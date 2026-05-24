@@ -11,7 +11,8 @@
     "south_herb_patch",
     "south_old_well",
     "south_road_sign",
-    "south_north_gate_sign"
+    "south_north_gate_sign",
+    "south_garden_gate_sign"
   ],
   "items": ["spice_crate_seal", "wild_honeycomb", "meadow_herbs"],
   "spawn": {
@@ -24,6 +25,12 @@
       "to": "city",
       "area": { "x": 700, "y": 0, "width": 140, "height": 72 },
       "spawn": { "x": 768, "y": 920 }
+    },
+    {
+      "id": "south_garden_gate",
+      "to": "overgrown_garden",
+      "area": { "x": 700, "y": 944, "width": 140, "height": 80 },
+      "spawn": { "x": 768, "y": 120 }
     }
   ]
 }

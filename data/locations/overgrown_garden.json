@@ -1,0 +1,22 @@
+{
+  "id": "overgrown_garden",
+  "name": "Заросший сад",
+  "map": "assets/maps/overgrown_garden/background.png",
+  "collisionMap": "src/maps/overgrownGardenCollisionMap.js",
+  "characters": [],
+  "quests": [],
+  "objects": [],
+  "items": [],
+  "spawn": {
+    "x": 768,
+    "y": 120
+  },
+  "exits": [
+    {
+      "id": "north_gate",
+      "to": "south_outskirts",
+      "area": { "x": 700, "y": 0, "width": 140, "height": 72 },
+      "spawn": { "x": 768, "y": 940 }
+    }
+  ]
+}
