@@ -14,10 +14,13 @@ let content;
 let collisionMap;
 let cat;
 let npcs = [];
+let objects = [];
 let activeNpc = null;
+let activeInteractable = null;
 let keys = {};
 let questLog = [];
 let questStates = {};
+let inventory = {};
 let inDialog = false;
 let dialogIndex = 0;
 let dialogLines = [];
@@ -32,6 +35,10 @@ const questsButton = document.getElementById("questsButton");
 const questsPanel = document.getElementById("questsPanel");
 const questsList = document.getElementById("questsList");
 const closeQuests = document.getElementById("closeQuests");
+const inventoryButton = document.getElementById("inventoryButton");
+const inventoryPanel = document.getElementById("inventoryPanel");
+const inventoryList = document.getElementById("inventoryList");
+const closeInventory = document.getElementById("closeInventory");
 const dialogBox = document.getElementById("dialogBox");
 const dialogText = document.getElementById("dialogText");
 const nextDialog = document.getElementById("nextDialog");
@@ -51,12 +58,25 @@ async function startGame() {
 
   questsButton.addEventListener("click", () => {
     questsPanel.classList.toggle("visible");
+    inventoryPanel.classList.remove("visible");
     updateQuestList();
+  });
+
+  inventoryButton.addEventListener("click", () => {
+    inventoryPanel.classList.toggle("visible");
+    questsPanel.classList.remove("visible");
+    updateInventoryList();
   });
 
   if (closeQuests) {
     closeQuests.addEventListener("click", () => {
       questsPanel.classList.remove("visible");
+    });
+  }
+
+  if (closeInventory) {
+    closeInventory.addEventListener("click", () => {
+      inventoryPanel.classList.remove("visible");
     });
   }
 
@@ -86,6 +106,7 @@ async function switchLocation(locationId, spawnOverride = null) {
 
   cat = cat ? { ...cat, x: nextCat.x, y: nextCat.y, moving: false } : nextCat;
   npcs = createNpcs();
+  objects = createObjects();
   showNotification(content.location.name);
   setTimeout(() => {
     isTransitioning = false;
@@ -112,10 +133,17 @@ function handleKey(e) {
 }
 
 function tryTalk() {
-  const npc = findNearestInteractableNpc();
-  if (npc) {
-    startDialog(npc);
+  const interactable = findNearestInteractable();
+  if (!interactable) {
+    return;
   }
+
+  if (interactable.type === "npc") {
+    startDialog(interactable.entity);
+    return;
+  }
+
+  startObjectDialog(interactable.entity);
 }
 
 function startDialog(npc) {
@@ -134,6 +162,27 @@ function startDialog(npc) {
   dialogText.textContent = dialogLines[dialogIndex];
 }
 
+function startObjectDialog(object) {
+  const activeQuestIds = (object.questCompletions || []).filter(
+    (questId) => questStates[questId] === "active"
+  );
+  const questId = activeQuestIds[0];
+  const lines = questId && object.questLines?.[questId]
+    ? object.questLines[questId]
+    : object.lines;
+
+  inDialog = true;
+  activeNpc = null;
+  activeInteractable = object;
+  dialogBox.classList.remove("hidden");
+  dialogLines = lines || [`${object.name}: Здесь пока ничего не происходит.`];
+  dialogAction = activeQuestIds.length
+    ? { collectObject: object.id, questIds: activeQuestIds }
+    : null;
+  dialogIndex = 0;
+  dialogText.textContent = dialogLines[dialogIndex];
+}
+
 function nextDialogLine() {
   dialogIndex++;
   if (dialogIndex < dialogLines.length) {
@@ -148,6 +197,7 @@ function nextDialogLine() {
   }
   runDialogAction(dialogAction);
   activeNpc = null;
+  activeInteractable = null;
   dialogAction = null;
 }
 
@@ -161,6 +211,15 @@ function runDialogAction(action) {
   if (action.finishQuest) {
     finishQuest(action.finishQuest);
   }
+  if (action.completeQuest) {
+    completeQuest(action.completeQuest);
+  }
+  if (action.completeQuests) {
+    action.completeQuests.forEach((questId) => completeQuest(questId));
+  }
+  if (action.collectObject) {
+    collectObjectRewards(action.collectObject, action.questIds || []);
+  }
 }
 
 function startQuest(questId) {
@@ -169,6 +228,9 @@ function startQuest(questId) {
   }
 
   const quest = content.quests[questId];
+  if (!quest) {
+    return;
+  }
   questStates[questId] = "active";
   questLog.push({
     id: quest.id,
@@ -185,6 +247,9 @@ function completeQuest(questId) {
   }
 
   const quest = content.quests[questId];
+  if (!quest) {
+    return;
+  }
   questStates[questId] = "completed";
   updateQuestStatus(questId, quest.statusLabels.completed);
   showNotification(quest.notifications.completed);
@@ -196,6 +261,15 @@ function finishQuest(questId) {
   }
 
   const quest = content.quests[questId];
+  if (!quest) {
+    return;
+  }
+  if (!hasRequiredItems(quest.turnIn?.requiresItems || [])) {
+    showNotification("Не хватает предметов для сдачи квеста.");
+    return;
+  }
+
+  consumeItems(quest.turnIn?.consumeItems || []);
   questStates[questId] = "delivered";
   updateQuestStatus(questId, quest.statusLabels.delivered);
   showNotification(quest.notifications.delivered);
@@ -216,6 +290,86 @@ function updateQuestList() {
     li.textContent = `${quest.name} - ${quest.status}`;
     questsList.appendChild(li);
   });
+}
+
+function addItem(itemId, quantity = 1) {
+  const item = content.items?.[itemId] || inventory[itemId] || {
+    id: itemId,
+    name: itemId,
+  };
+  const current = inventory[itemId]?.quantity || 0;
+  inventory[itemId] = {
+    id: itemId,
+    name: item.name,
+    quantity: current + quantity,
+  };
+  updateInventoryList();
+  showNotification(`Получено: ${item.name}`);
+}
+
+function consumeItems(items) {
+  items.forEach((entry) => {
+    const itemId = typeof entry === "string" ? entry : entry.id;
+    const quantity = typeof entry === "string" ? 1 : entry.quantity || 1;
+    if (!inventory[itemId]) {
+      return;
+    }
+    inventory[itemId].quantity -= quantity;
+    if (inventory[itemId].quantity <= 0) {
+      delete inventory[itemId];
+    }
+  });
+  updateInventoryList();
+}
+
+function hasItem(itemId, quantity = 1) {
+  return (inventory[itemId]?.quantity || 0) >= quantity;
+}
+
+function hasRequiredItems(items) {
+  return items.every((entry) => {
+    const itemId = typeof entry === "string" ? entry : entry.id;
+    const quantity = typeof entry === "string" ? 1 : entry.quantity || 1;
+    return hasItem(itemId, quantity);
+  });
+}
+
+function updateInventoryList() {
+  inventoryList.innerHTML = "";
+  const items = Object.values(inventory);
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.textContent = "Пусто";
+    inventoryList.appendChild(li);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item.quantity > 1
+      ? `${item.name} x${item.quantity}`
+      : item.name;
+    inventoryList.appendChild(li);
+  });
+}
+
+function collectObjectRewards(objectId, questIds) {
+  const object = content.objects?.[objectId];
+  if (!object) {
+    return;
+  }
+
+  (object.itemRewards || []).forEach((reward) => {
+    if (reward.questId && !questIds.includes(reward.questId)) {
+      return;
+    }
+    if (reward.once && hasItem(reward.itemId, reward.quantity || 1)) {
+      return;
+    }
+    addItem(reward.itemId, reward.quantity || 1);
+  });
+
+  checkQuestProgress();
 }
 
 function showNotification(text) {
@@ -240,6 +394,9 @@ function checkQuestProgress() {
       completeQuest(quest.id);
     }
     if (quest.completion?.type === "playerInArea" && isPointInArea(cat, quest.completion.area)) {
+      completeQuest(quest.id);
+    }
+    if (quest.completion?.type === "hasItem" && hasItem(quest.completion.itemId, quest.completion.quantity || 1)) {
       completeQuest(quest.id);
     }
   });
@@ -325,7 +482,7 @@ function findLargestRoadCluster() {
 
 function createNpcs() {
   const biggestRoad = findLargestRoadCluster();
-  return content.location.characters.map((characterId) => {
+  return (content.location.characters || []).map((characterId) => {
     const character = content.characters[characterId];
     const position = resolveNpcPosition(character, biggestRoad);
     const npc = new NPCGuard(
@@ -337,8 +494,15 @@ function createNpcs() {
       biggestRoad
     );
     npc.data = character;
+    npc.isStatic = character.movement === "static";
     return npc;
   });
+}
+
+function createObjects() {
+  return (content.location.objects || [])
+    .map((objectId) => content.objects[objectId])
+    .filter(Boolean);
 }
 
 function resolveNpcPosition(character, roadCluster) {
@@ -361,11 +525,25 @@ function resolveNpcPosition(character, roadCluster) {
   };
 }
 
-function findNearestInteractableNpc() {
-  return npcs.find((npc) => {
-    const dist = Math.hypot(cat.x - npc.x, cat.y - npc.y);
-    return dist <= INTERACT_RADIUS;
-  });
+function findNearestInteractable() {
+  const candidates = [
+    ...npcs.map((npc) => ({
+      type: "npc",
+      entity: npc,
+      radius: INTERACT_RADIUS,
+      distance: Math.hypot(cat.x - npc.x, cat.y - npc.y),
+    })),
+    ...objects.map((object) => ({
+      type: "object",
+      entity: object,
+      radius: object.radius || INTERACT_RADIUS,
+      distance: Math.hypot(cat.x - object.position.x, cat.y - object.position.y),
+    })),
+  ];
+
+  return candidates
+    .filter((candidate) => candidate.distance <= candidate.radius)
+    .sort((a, b) => a.distance - b.distance)[0];
 }
 
 function loop() {
@@ -416,12 +594,12 @@ function update() {
   }
 
   npcs.forEach((npc) => {
-    if (!npc.isFrozen) {
+    if (!npc.isFrozen && !npc.isStatic) {
       npc.update();
     }
   });
 
-  showHint = Boolean(findNearestInteractableNpc()) && !inDialog;
+  showHint = Boolean(findNearestInteractable()) && !inDialog;
 
   checkQuestProgress();
   checkLocationExits();
@@ -430,6 +608,7 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mapBackground, 0, 0);
+  drawObjectMarkers();
   npcs.forEach((npc) => npc.draw(ctx));
 
   const frameImg = playerFrames[cat.direction][cat.frame];
@@ -438,15 +617,34 @@ function draw() {
   ctx.drawImage(frameImg, cat.x - w / 2, cat.y - h / 2, w, h);
 
   const activeQuest = Object.values(content.quests).find(
-    (quest) => questStates[quest.id] === "active"
+    (quest) => questStates[quest.id] === "active" &&
+      (!quest.targetLocation || quest.targetLocation === content.location.id)
   );
   if (activeQuest) {
     drawPulsingHighlight(activeQuest);
   }
 
   if (showHint) {
-    drawHintAboveGuard();
+    drawInteractionHint();
   }
+}
+
+function drawObjectMarkers() {
+  highlightPulse += 0.01;
+  objects.forEach((object) => {
+    const marker = object.marker || object.position;
+    const size = 7 + Math.sin(highlightPulse * 2) * 2;
+
+    ctx.save();
+    ctx.translate(marker.x, marker.y - 36);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = "rgba(255, 232, 112, 0.85)";
+    ctx.strokeStyle = "rgba(59, 43, 20, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.restore();
+  });
 }
 
 function drawPulsingHighlight(quest) {
@@ -462,9 +660,14 @@ function drawPulsingHighlight(quest) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function drawHintAboveGuard() {
+function drawInteractionHint() {
   hintPulse += 0.08;
   const opacity = 0.5 + Math.sin(hintPulse) * 0.5;
+  const interactable = findNearestInteractable();
+
+  if (!interactable) {
+    return;
+  }
 
   ctx.save();
   ctx.font = "bold 18px monospace";
@@ -473,14 +676,13 @@ function drawHintAboveGuard() {
   ctx.strokeStyle = `rgba(0, 0, 0, ${opacity})`;
   ctx.lineWidth = 3;
 
-  const npc = findNearestInteractableNpc();
-  if (!npc) {
-    ctx.restore();
-    return;
-  }
+  const textX = interactable.type === "npc"
+    ? interactable.entity.x
+    : interactable.entity.position.x;
+  const textY = interactable.type === "npc"
+    ? interactable.entity.y - interactable.entity.height / 2 - 10
+    : interactable.entity.position.y - 42;
 
-  const textX = npc.x + npc.width / 2;
-  const textY = npc.y - 15;
   ctx.strokeText("E", textX, textY);
   ctx.fillText("E", textX, textY);
   ctx.restore();

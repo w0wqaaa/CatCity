@@ -1,0 +1,29 @@
+{
+  "id": "south_herb_patch",
+  "name": "Заросли луговых трав",
+  "type": "quest_object",
+  "position": {
+    "x": 315,
+    "y": 780
+  },
+  "radius": 100,
+  "lines": [
+    "У тропы растут светлые луговые травы.",
+    "Если бы кому-то понадобился отвар, это место было бы идеальным."
+  ],
+  "questCompletions": ["findMeadowHerbs"],
+  "itemRewards": [
+    {
+      "questId": "findMeadowHerbs",
+      "itemId": "meadow_herbs",
+      "quantity": 1,
+      "once": true
+    }
+  ],
+  "questLines": {
+    "findMeadowHerbs": [
+      "Вы аккуратно собираете светлые луговые травы.",
+      "Теперь их нужно отнести травнице Мира."
+    ]
+  }
+}

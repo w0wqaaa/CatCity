@@ -1,0 +1,13 @@
+{
+  "id": "beekeeper",
+  "name": "Пасечник Бруно",
+  "type": "npc",
+  "sprite": "assets/characters/beekeeper/cat_beekeeper.png",
+  "position": {
+    "x": 1140,
+    "y": 760
+  },
+  "movement": "static",
+  "dialog": "beekeeper_intro",
+  "quests": []
+}

@@ -2,6 +2,7 @@
   "id": "northStreet",
   "name": "Осмотреть северную улицу",
   "giver": "guard",
+  "targetLocation": "city",
   "statusLabels": {
     "active": "Активен",
     "completed": "Выполнен, вернитесь к стражу",

@@ -1,0 +1,13 @@
+{
+  "id": "baker",
+  "name": "Пекарь Тома",
+  "type": "merchant",
+  "sprite": "assets/characters/baker/cat_baker.png",
+  "position": {
+    "x": 1024,
+    "y": 512
+  },
+  "movement": "static",
+  "dialog": "baker_intro",
+  "quests": ["wildHoneyDelivery"]
+}

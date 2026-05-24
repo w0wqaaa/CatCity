@@ -1,0 +1,29 @@
+{
+  "id": "south_beehives",
+  "name": "Пасека",
+  "type": "quest_object",
+  "position": {
+    "x": 1140,
+    "y": 760
+  },
+  "radius": 95,
+  "lines": [
+    "Ульи тихо гудят. Пчелы кружат над солнечными цветами.",
+    "Мед пахнет густо и сладко."
+  ],
+  "questCompletions": ["wildHoneyDelivery"],
+  "itemRewards": [
+    {
+      "questId": "wildHoneyDelivery",
+      "itemId": "wild_honeycomb",
+      "quantity": 1,
+      "once": true
+    }
+  ],
+  "questLines": {
+    "wildHoneyDelivery": [
+      "Вы осторожно осматриваете ульи.",
+      "Мед созрел. Можно передать пекарю Тома, что сбор пора начинать."
+    ]
+  }
+}

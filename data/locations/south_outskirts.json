@@ -3,8 +3,17 @@
   "name": "Южная окраина",
   "map": "assets/maps/south_outskirts/background.png",
   "collisionMap": "src/maps/southOutskirtsCollisionMap.js",
-  "characters": ["herbalist"],
-  "quests": ["findMeadowHerbs"],
+  "characters": ["herbalist", "road_scout", "beekeeper"],
+  "quests": ["findMeadowHerbs", "lostSpiceCrate", "wildHoneyDelivery"],
+  "objects": [
+    "south_supply_cart",
+    "south_beehives",
+    "south_herb_patch",
+    "south_old_well",
+    "south_road_sign",
+    "south_north_gate_sign"
+  ],
+  "items": ["spice_crate_seal", "wild_honeycomb", "meadow_herbs"],
   "spawn": {
     "x": 768,
     "y": 112

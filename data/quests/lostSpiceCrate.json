@@ -1,0 +1,29 @@
+{
+  "id": "lostSpiceCrate",
+  "name": "Проверить ящик специй",
+  "giver": "spice_merchant",
+  "targetLocation": "south_outskirts",
+  "statusLabels": {
+    "active": "Активен",
+    "completed": "Ящик найден, вернитесь к купцу Реми",
+    "delivered": "Завершён"
+  },
+  "notifications": {
+    "started": "Новый квест: проверить ящик специй",
+    "completed": "Ящик специй найден! Вернитесь к купцу Реми.",
+    "delivered": "Квест завершён! Торговля специями спасена."
+  },
+  "completion": {
+    "type": "hasItem",
+    "itemId": "spice_crate_seal"
+  },
+  "turnIn": {
+    "requiresItems": ["spice_crate_seal"],
+    "consumeItems": ["spice_crate_seal"]
+  },
+  "highlight": {
+    "x": 1188,
+    "y": 515,
+    "radius": 220
+  }
+}

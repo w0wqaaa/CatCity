@@ -1,0 +1,29 @@
+{
+  "id": "south_supply_cart",
+  "name": "Телега со специями",
+  "type": "quest_object",
+  "position": {
+    "x": 1188,
+    "y": 515
+  },
+  "radius": 95,
+  "lines": [
+    "Телега стоит у дороги. Внутри пахнет пряностями и дорожной пылью.",
+    "Синий ящик заперт, но выглядит целым."
+  ],
+  "questCompletions": ["lostSpiceCrate"],
+  "itemRewards": [
+    {
+      "questId": "lostSpiceCrate",
+      "itemId": "spice_crate_seal",
+      "quantity": 1,
+      "once": true
+    }
+  ],
+  "questLines": {
+    "lostSpiceCrate": [
+      "Вы проверяете синий ящик в телеге.",
+      "Печать купца Реми цела, специи на месте."
+    ]
+  }
+}

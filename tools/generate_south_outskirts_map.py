@@ -111,6 +111,61 @@ def draw_crate(draw, x, y):
     draw.line((x + 46, y + 8, x + 8, y + 38), fill=WOOD_DARK, width=3)
 
 
+def draw_cart(draw, x, y):
+    draw.rectangle((x, y + 18, x + 96, y + 62), fill=(132, 73, 35, 255))
+    draw.rectangle((x + 8, y + 25, x + 88, y + 54), fill=(172, 95, 41, 255))
+    draw.rectangle((x + 20, y + 4, x + 62, y + 34), fill=(43, 86, 131, 255))
+    draw.rectangle((x + 26, y + 10, x + 56, y + 30), fill=(68, 122, 173, 255))
+    draw.line((x - 22, y + 40, x + 7, y + 40), fill=WOOD_DARK, width=5)
+    draw.line((x + 90, y + 40, x + 124, y + 32), fill=WOOD_DARK, width=5)
+    draw.ellipse((x + 8, y + 50, x + 34, y + 76), fill=WOOD_DARK)
+    draw.ellipse((x + 66, y + 50, x + 92, y + 76), fill=WOOD_DARK)
+    draw.ellipse((x + 15, y + 57, x + 27, y + 69), fill=(212, 156, 69, 255))
+    draw.ellipse((x + 73, y + 57, x + 85, y + 69), fill=(212, 156, 69, 255))
+
+
+def draw_well(draw, x, y):
+    draw.ellipse((x - 40, y + 26, x + 40, y + 64), fill=(67, 76, 72, 255))
+    draw.ellipse((x - 32, y + 30, x + 32, y + 56), fill=(37, 45, 51, 255))
+    draw.rectangle((x - 34, y + 12, x + 34, y + 42), fill=(98, 104, 94, 255))
+    draw.rectangle((x - 26, y + 18, x + 26, y + 38), fill=(129, 135, 119, 255))
+    draw.line((x - 48, y + 14, x + 48, y + 14), fill=WOOD_DARK, width=5)
+    draw.rectangle((x - 42, y - 28, x - 34, y + 32), fill=WOOD_DARK)
+    draw.rectangle((x + 34, y - 28, x + 42, y + 32), fill=WOOD_DARK)
+    draw.polygon([(x - 50, y - 28), (x, y - 62), (x + 50, y - 28)], fill=(152, 75, 31, 255))
+
+
+def draw_sign(draw, x, y):
+    draw.rectangle((x - 6, y, x + 6, y + 58), fill=WOOD_DARK)
+    draw.rectangle((x - 50, y + 5, x + 50, y + 28), fill=(164, 99, 47, 255))
+    draw.rectangle((x - 45, y + 9, x + 45, y + 24), outline=WOOD_DARK, width=3)
+    draw.polygon([(x + 50, y + 5), (x + 72, y + 16), (x + 50, y + 28)], fill=(164, 99, 47, 255))
+
+
+def draw_gate_sign(draw, x, y, direction="left"):
+    draw.rectangle((x - 7, y, x + 7, y + 70), fill=WOOD_DARK)
+    draw.rectangle((x - 78, y + 7, x + 78, y + 35), fill=(176, 108, 53, 255))
+    draw.rectangle((x - 70, y + 12, x + 70, y + 30), outline=WOOD_DARK, width=3)
+    if direction == "left":
+        draw.polygon([(x - 78, y + 7), (x - 112, y + 21), (x - 78, y + 35)], fill=(176, 108, 53, 255))
+    else:
+        draw.polygon([(x + 78, y + 7), (x + 112, y + 21), (x + 78, y + 35)], fill=(176, 108, 53, 255))
+    draw.rectangle((x - 34, y + 18, x + 34, y + 24), fill=(91, 57, 29, 255))
+
+
+def draw_beehives(draw, x, y):
+    for offset in [0, 48, 96]:
+        bx = x + offset
+        draw.rectangle((bx, y + 20, bx + 34, y + 54), fill=(183, 132, 45, 255))
+        draw.rectangle((bx + 4, y + 10, bx + 30, y + 20), fill=(220, 168, 64, 255))
+        draw.rectangle((bx + 5, y + 28, bx + 29, y + 32), fill=(124, 83, 32, 255))
+        draw.rectangle((bx + 5, y + 42, bx + 29, y + 46), fill=(124, 83, 32, 255))
+        draw.ellipse((bx + 13, y + 34, bx + 22, y + 43), fill=(58, 44, 32, 255))
+    for px, py in [(x + 6, y - 8), (x + 58, y + 1), (x + 112, y - 7), (x + 140, y + 20)]:
+        draw.rectangle((px, py, px + 5, py + 4), fill=(234, 210, 59, 255))
+        draw.rectangle((px + 5, py + 1, px + 8, py + 3), fill=(47, 43, 33, 255))
+
+
 def draw_bench(draw, x, y):
     draw.rectangle((x, y, x + 115, y + 19), fill=WOOD)
     draw.rectangle((x, y + 20, x + 115, y + 34), fill=WOOD_DARK)
@@ -139,12 +194,14 @@ def draw_decor(draw):
     draw_round_tree(draw, 1330, 305, 0.55)
     draw_pine(draw, 1210, 268, 0.72)
     draw_pine(draw, 1140, 802, 0.55)
-    draw_crate(draw, 640, 352)
-    draw_crate(draw, 875, 708)
-    draw_crate(draw, 1188, 515)
+    draw_cart(draw, 1138, 486)
     draw_bench(draw, 302, 366)
     draw_bench(draw, 1030, 335)
     draw_herb_patch(draw, 315, 745)
+    draw_well(draw, 875, 708)
+    draw_sign(draw, 640, 352)
+    draw_gate_sign(draw, 890, 120, "left")
+    draw_beehives(draw, 1088, 720)
 
 
 def make_collision(path_rects):

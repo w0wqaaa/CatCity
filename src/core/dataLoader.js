@@ -21,13 +21,25 @@ async function loadByIds(ids, pathForId) {
 export async function loadGameContent(locationId = "city") {
   const location = await loadJson(`data/locations/${locationId}.json`);
   const collisionMap = await loadCollisionMap(location.collisionMap);
+  const characterIds = location.characters || [];
+  const questIds = location.quests || [];
+  const objectIds = location.objects || [];
+  const itemIds = location.items || [];
   const characters = await loadByIds(
-    location.characters,
+    characterIds,
     (id) => `data/characters/${id}.json`
   );
   const quests = await loadByIds(
-    location.quests,
+    questIds,
     (id) => `data/quests/${id}.json`
+  );
+  const objects = await loadByIds(
+    objectIds,
+    (id) => `data/objects/${id}.json`
+  );
+  const items = await loadByIds(
+    itemIds,
+    (id) => `data/items/${id}.json`
   );
 
   const dialogIds = new Set();
@@ -47,6 +59,8 @@ export async function loadGameContent(locationId = "city") {
     collisionMap,
     characters,
     quests,
+    objects,
+    items,
     dialogs,
   };
 }

@@ -1,0 +1,13 @@
+{
+  "id": "road_scout",
+  "name": "Следопыт Норд",
+  "type": "npc",
+  "sprite": "assets/characters/road_scout/cat_road_scout.png",
+  "position": {
+    "x": 740,
+    "y": 520
+  },
+  "movement": "static",
+  "dialog": "road_scout_intro",
+  "quests": []
+}

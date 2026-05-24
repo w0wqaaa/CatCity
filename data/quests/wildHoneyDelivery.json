@@ -1,0 +1,29 @@
+{
+  "id": "wildHoneyDelivery",
+  "name": "Проверить дикий мед",
+  "giver": "baker",
+  "targetLocation": "south_outskirts",
+  "statusLabels": {
+    "active": "Активен",
+    "completed": "Мед проверен, вернитесь к пекарю Тома",
+    "delivered": "Завершён"
+  },
+  "notifications": {
+    "started": "Новый квест: проверить дикий мед",
+    "completed": "Мед готов! Вернитесь к пекарю Тома.",
+    "delivered": "Квест завершён! Пекарь приготовит сладкие булочки."
+  },
+  "completion": {
+    "type": "hasItem",
+    "itemId": "wild_honeycomb"
+  },
+  "turnIn": {
+    "requiresItems": ["wild_honeycomb"],
+    "consumeItems": ["wild_honeycomb"]
+  },
+  "highlight": {
+    "x": 1140,
+    "y": 760,
+    "radius": 220
+  }
+}

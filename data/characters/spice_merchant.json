@@ -1,0 +1,13 @@
+{
+  "id": "spice_merchant",
+  "name": "Купец Реми",
+  "type": "merchant",
+  "sprite": "assets/characters/spice_merchant/cat_spice_merchant.png",
+  "position": {
+    "x": 512,
+    "y": 512
+  },
+  "movement": "static",
+  "dialog": "spice_merchant_intro",
+  "quests": ["lostSpiceCrate"]
+}

@@ -3,8 +3,10 @@
   "name": "Cat City",
   "map": "assets/maps/city/background.png",
   "collisionMap": "src/maps/cityCollisionMap.js",
-  "characters": ["guard"],
-  "quests": ["northStreet"],
+  "characters": ["guard", "spice_merchant", "baker"],
+  "quests": ["northStreet", "lostSpiceCrate", "wildHoneyDelivery"],
+  "objects": ["city_south_gate_sign"],
+  "items": ["spice_crate_seal", "wild_honeycomb", "meadow_herbs"],
   "spawn": {
     "strategy": "closestRoadToCenter"
   },

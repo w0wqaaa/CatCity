@@ -24,7 +24,8 @@ canvas {
   font-family: monospace;
 }
 
-#questsButton {
+#questsButton,
+#inventoryButton {
   background: #333;
   color: #eee;
   border: 1px solid #666;
@@ -35,12 +36,14 @@ canvas {
   transition: background 0.2s;
 }
 
-#questsButton:hover {
+#questsButton:hover,
+#inventoryButton:hover {
   background: #444;
 }
 
 /* === Панель квестов === */
-#questsPanel {
+#questsPanel,
+#inventoryPanel {
   position: fixed;
   top: 80px;
   left: 50%;
@@ -61,20 +64,27 @@ canvas {
   display: block;
 }
 
-#questsPanel h3 {
+#inventoryPanel.visible {
+  display: block;
+}
+
+#questsPanel h3,
+#inventoryPanel h3 {
   margin-top: 0;
   text-align: center;
   font-size: 16px;
   color: #ffda75;
 }
 
-#questsPanel ul {
+#questsPanel ul,
+#inventoryPanel ul {
   list-style: none;
   padding: 0;
   margin: 10px 0;
 }
 
-#questsPanel li {
+#questsPanel li,
+#inventoryPanel li {
   padding: 4px 0;
   border-bottom: 1px dashed #666;
   font-size: 14px;

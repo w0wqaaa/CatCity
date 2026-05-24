@@ -5,7 +5,7 @@
 - `index.html` loads the game.
 - `style.css` contains UI and canvas styles.
 - `src/core/` contains the main game loop and asset loading.
-- `src/core/dataLoader.js` loads locations, characters, quests, and dialogs from `data/`.
+- `src/core/dataLoader.js` loads locations, characters, quests, dialogs, and objects from `data/`.
 - `src/entities/` contains character and NPC classes.
 - `src/maps/` contains map-specific runtime files such as collision maps.
 - `src/config/` contains shared constants and asset paths.
@@ -16,6 +16,8 @@
 - `assets/characters/<character>/` stores character sprites and animation frames.
 - `data/locations/` stores location metadata.
 - `data/characters/` stores character metadata.
+- `data/objects/` stores inspectable and quest-related map objects.
+- `data/items/` stores inventory item names and descriptions.
 - `data/quests/` stores quest definitions.
 - `data/dialogs/` stores dialog scripts.
 
