@@ -119,8 +119,8 @@ function tryTalk() {
 }
 
 function startDialog(npc) {
-  const questId = npc.data.quests[0];
-  const stage = questStates[questId] || "none";
+  const questId = npc.data.quests?.[0];
+  const stage = questId ? questStates[questId] || "none" : "none";
   const dialog = content.dialogs[npc.data.dialog];
   const stageDialog = dialog.stages[stage] || dialog.stages.none;
 
@@ -239,6 +239,9 @@ function checkQuestProgress() {
     if (quest.completion?.type === "playerYLessThan" && cat.y < quest.completion.value) {
       completeQuest(quest.id);
     }
+    if (quest.completion?.type === "playerInArea" && isPointInArea(cat, quest.completion.area)) {
+      completeQuest(quest.id);
+    }
   });
 }
 
@@ -247,16 +250,20 @@ function checkLocationExits() {
     return;
   }
 
-  const exit = content.location.exits?.find(({ area }) => (
-    cat.x >= area.x &&
-    cat.x <= area.x + area.width &&
-    cat.y >= area.y &&
-    cat.y <= area.y + area.height
-  ));
+  const exit = content.location.exits?.find(({ area }) => isPointInArea(cat, area));
 
   if (exit) {
     switchLocation(exit.to, exit.spawn);
   }
+}
+
+function isPointInArea(point, area) {
+  return (
+    point.x >= area.x &&
+    point.x <= area.x + area.width &&
+    point.y >= area.y &&
+    point.y <= area.y + area.height
+  );
 }
 
 function findClosestRoad(startX, startY) {

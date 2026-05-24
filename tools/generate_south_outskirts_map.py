@@ -118,6 +118,20 @@ def draw_bench(draw, x, y):
     draw.rectangle((x + 90, y + 34, x + 100, y + 58), fill=WOOD_DARK)
 
 
+def draw_herb_patch(draw, x, y):
+    draw.rectangle((x - 38, y + 34, x + 98, y + 52), fill=(83, 117, 70, 180))
+    for dx, dy in [
+        (-24, 18), (-6, 12), (13, 22), (32, 10), (54, 20),
+        (74, 12), (-30, 38), (4, 42), (29, 36), (61, 42), (87, 35),
+    ]:
+        px = x + dx
+        py = y + dy
+        draw.rectangle((px, py + 10, px + 5, py + 25), fill=(35, 106, 39, 255))
+        draw.rectangle((px - 7, py + 13, px + 3, py + 18), fill=(76, 157, 72, 255))
+        draw.rectangle((px + 2, py + 9, px + 12, py + 15), fill=(95, 180, 82, 255))
+        draw.rectangle((px + 2, py + 3, px + 8, py + 9), fill=(227, 209, 73, 255))
+
+
 def draw_decor(draw):
     draw_round_tree(draw, 235, 675, 0.95)
     draw_round_tree(draw, 1250, 728, 0.78)
@@ -130,6 +144,7 @@ def draw_decor(draw):
     draw_crate(draw, 1188, 515)
     draw_bench(draw, 302, 366)
     draw_bench(draw, 1030, 335)
+    draw_herb_patch(draw, 315, 745)
 
 
 def make_collision(path_rects):

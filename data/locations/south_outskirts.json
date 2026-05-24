@@ -3,8 +3,8 @@
   "name": "Южная окраина",
   "map": "assets/maps/south_outskirts/background.png",
   "collisionMap": "src/maps/southOutskirtsCollisionMap.js",
-  "characters": [],
-  "quests": [],
+  "characters": ["herbalist"],
+  "quests": ["findMeadowHerbs"],
   "spawn": {
     "x": 768,
     "y": 112
