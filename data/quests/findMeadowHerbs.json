@@ -1,0 +1,29 @@
+{
+  "id": "findMeadowHerbs",
+  "name": "Собрать луговые травы",
+  "giver": "herbalist",
+  "statusLabels": {
+    "active": "Активен",
+    "completed": "Травы собраны, вернитесь к Мира",
+    "delivered": "Завершён"
+  },
+  "notifications": {
+    "started": "Новый квест: собрать луговые травы",
+    "completed": "Травы собраны! Вернитесь к травнице.",
+    "delivered": "Квест завершён! Травница приготовит лечебный отвар."
+  },
+  "completion": {
+    "type": "playerInArea",
+    "area": {
+      "x": 250,
+      "y": 720,
+      "width": 160,
+      "height": 120
+    }
+  },
+  "highlight": {
+    "x": 330,
+    "y": 780,
+    "radius": 220
+  }
+}

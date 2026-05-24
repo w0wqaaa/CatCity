@@ -1,0 +1,12 @@
+{
+  "id": "herbalist",
+  "name": "Травница Мира",
+  "type": "npc",
+  "sprite": "assets/characters/herbalist/cat_herbalist.png",
+  "position": {
+    "x": 1030,
+    "y": 520
+  },
+  "dialog": "herbalist_intro",
+  "quests": ["findMeadowHerbs"]
+}
