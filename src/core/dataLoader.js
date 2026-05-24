@@ -6,6 +6,11 @@ async function loadJson(path) {
   return response.json();
 }
 
+async function loadCollisionMap(path) {
+  const module = await import(`../../${path}`);
+  return module.collisionMap;
+}
+
 async function loadByIds(ids, pathForId) {
   const entries = await Promise.all(
     ids.map(async (id) => [id, await loadJson(pathForId(id))])
@@ -15,6 +20,7 @@ async function loadByIds(ids, pathForId) {
 
 export async function loadGameContent(locationId = "city") {
   const location = await loadJson(`data/locations/${locationId}.json`);
+  const collisionMap = await loadCollisionMap(location.collisionMap);
   const characters = await loadByIds(
     location.characters,
     (id) => `data/characters/${id}.json`
@@ -38,6 +44,7 @@ export async function loadGameContent(locationId = "city") {
 
   return {
     location,
+    collisionMap,
     characters,
     quests,
     dialogs,

@@ -1,16 +1,17 @@
-import { loadAssets } from "./assetLoader.js";
+import { loadImage, loadPlayerFrames } from "./assetLoader.js";
 import { loadGameContent } from "./dataLoader.js";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js";
 import { NPCGuard } from "../entities/NPCGuard.js";
-import { collisionMap } from "../maps/cityCollisionMap.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 canvas.width = CANVAS.width;
 canvas.height = CANVAS.height;
 
-let assets;
+let playerFrames;
+let mapBackground;
 let content;
+let collisionMap;
 let cat;
 let npcs = [];
 let activeNpc = null;
@@ -25,6 +26,7 @@ let notificationTimeout = null;
 let highlightPulse = 0;
 let showHint = false;
 let hintPulse = 0;
+let isTransitioning = false;
 
 const questsButton = document.getElementById("questsButton");
 const questsPanel = document.getElementById("questsPanel");
@@ -40,27 +42,8 @@ notification.classList.add("hidden");
 document.body.appendChild(notification);
 
 async function startGame() {
-  [assets, content] = await Promise.all([
-    loadAssets(),
-    loadGameContent("city"),
-  ]);
-
-  const centerTileX = Math.floor(collisionMap[0].length / 2);
-  const centerTileY = Math.floor(collisionMap.length / 2);
-  const playerTile = findClosestRoad(centerTileX, centerTileY);
-
-  cat = {
-    x: playerTile.x * TILE_SIZE + TILE_SIZE / 2,
-    y: playerTile.y * TILE_SIZE + TILE_SIZE / 2,
-    scale: 0.1,
-    direction: "down",
-    frame: 0,
-    speed: 2,
-    tick: 0,
-    moving: false,
-  };
-
-  npcs = createNpcs();
+  playerFrames = await loadPlayerFrames();
+  await switchLocation("city");
 
   window.addEventListener("keydown", handleKey);
   window.addEventListener("keyup", (e) => (keys[e.key] = false));
@@ -78,6 +61,46 @@ async function startGame() {
   }
 
   loop();
+}
+
+async function switchLocation(locationId, spawnOverride = null) {
+  isTransitioning = true;
+  content = await loadGameContent(locationId);
+  collisionMap = content.collisionMap;
+  mapBackground = await loadImage(content.location.map);
+
+  const centerTileX = Math.floor(collisionMap[0].length / 2);
+  const centerTileY = Math.floor(collisionMap.length / 2);
+  const playerTile = getSpawnPoint(centerTileX, centerTileY, spawnOverride);
+
+  const nextCat = {
+    x: playerTile.x * TILE_SIZE + TILE_SIZE / 2,
+    y: playerTile.y * TILE_SIZE + TILE_SIZE / 2,
+    scale: 0.1,
+    direction: "down",
+    frame: 0,
+    speed: 2,
+    tick: 0,
+    moving: false,
+  };
+
+  cat = cat ? { ...cat, x: nextCat.x, y: nextCat.y, moving: false } : nextCat;
+  npcs = createNpcs();
+  showNotification(content.location.name);
+  setTimeout(() => {
+    isTransitioning = false;
+  }, 250);
+}
+
+function getSpawnPoint(centerTileX, centerTileY, spawnOverride) {
+  const spawn = spawnOverride || content.location.spawn;
+  if (spawn?.x !== undefined && spawn?.y !== undefined) {
+    return {
+      x: Math.floor(spawn.x / TILE_SIZE),
+      y: Math.floor(spawn.y / TILE_SIZE),
+    };
+  }
+  return findClosestRoad(centerTileX, centerTileY);
 }
 
 function handleKey(e) {
@@ -217,6 +240,23 @@ function checkQuestProgress() {
       completeQuest(quest.id);
     }
   });
+}
+
+function checkLocationExits() {
+  if (isTransitioning) {
+    return;
+  }
+
+  const exit = content.location.exits?.find(({ area }) => (
+    cat.x >= area.x &&
+    cat.x <= area.x + area.width &&
+    cat.y >= area.y &&
+    cat.y <= area.y + area.height
+  ));
+
+  if (exit) {
+    switchLocation(exit.to, exit.spawn);
+  }
 }
 
 function findClosestRoad(startX, startY) {
@@ -377,14 +417,15 @@ function update() {
   showHint = Boolean(findNearestInteractableNpc()) && !inDialog;
 
   checkQuestProgress();
+  checkLocationExits();
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(assets.background, 0, 0);
+  ctx.drawImage(mapBackground, 0, 0);
   npcs.forEach((npc) => npc.draw(ctx));
 
-  const frameImg = assets[cat.direction][cat.frame];
+  const frameImg = playerFrames[cat.direction][cat.frame];
   const w = frameImg.width * cat.scale;
   const h = frameImg.height * cat.scale;
   ctx.drawImage(frameImg, cat.x - w / 2, cat.y - h / 2, w, h);

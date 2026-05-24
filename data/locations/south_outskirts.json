@@ -1,0 +1,20 @@
+{
+  "id": "south_outskirts",
+  "name": "Южная окраина",
+  "map": "assets/maps/south_outskirts/background.png",
+  "collisionMap": "src/maps/southOutskirtsCollisionMap.js",
+  "characters": [],
+  "quests": [],
+  "spawn": {
+    "x": 768,
+    "y": 112
+  },
+  "exits": [
+    {
+      "id": "north_gate",
+      "to": "city",
+      "area": { "x": 700, "y": 0, "width": 140, "height": 72 },
+      "spawn": { "x": 768, "y": 920 }
+    }
+  ]
+}
