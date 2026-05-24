@@ -1,9 +1,14 @@
-import { loadImage, loadPlayerFrames } from "./assetLoader.js";
-import { loadGameContent } from "./dataLoader.js";
-import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js";
-import { NPCGuard } from "../entities/NPCGuard.js";
+import { loadImage, loadMobFrames, loadPlayerFrames } from "./assetLoader.js?v=login-fix-1";
+import { loadGameContent } from "./dataLoader.js?v=login-fix-1";
+import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
+import { NPCGuard } from "../entities/NPCGuard.js?v=login-fix-1";
+import { Mob } from "../entities/Mob.js?v=login-fix-1";
 
 const SAVE_VERSION = 1;
+
+if (window.location.search) {
+  window.history.replaceState({}, "", window.location.pathname);
+}
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -16,6 +21,7 @@ let content;
 let collisionMap;
 let cat;
 let npcs = [];
+let mobs = [];
 let objects = [];
 let activeNpc = null;
 let activeInteractable = null;
@@ -36,6 +42,7 @@ let currentUser = null;
 let currentLocationId = "city";
 let loopStarted = false;
 let lastAutosaveAt = 0;
+let playerFramesPromise = null;
 
 const loginScreen = document.getElementById("loginScreen");
 const loginForm = document.getElementById("loginForm");
@@ -62,9 +69,15 @@ notification.classList.add("hidden");
 document.body.appendChild(notification);
 
 async function startGame() {
-  playerFrames = await loadPlayerFrames();
   setupEventListeners();
   initLogin();
+  playerFramesPromise = loadPlayerFrames();
+  try {
+    playerFrames = await playerFramesPromise;
+  } catch (error) {
+    console.error(error);
+    loginMessage.textContent = "Не удалось загрузить ассеты игрока. Проверьте файлы игры.";
+  }
 }
 
 function setupEventListeners() {
@@ -80,7 +93,15 @@ function setupEventListeners() {
       loginMessage.textContent = "Введите имя игрока.";
       return;
     }
-    await login(username);
+    try {
+      await login(username);
+    } catch (error) {
+      console.error(error);
+      loginScreen.classList.remove("hidden");
+      ui.classList.add("hidden");
+      currentUser = null;
+      loginMessage.textContent = "Не удалось войти в игру. Проверьте console и файлы проекта.";
+    }
   });
 
   questsButton.addEventListener("click", () => {
@@ -123,6 +144,10 @@ async function login(username) {
   currentUser = username;
   localStorage.setItem("catCity.lastUser", username);
   loadProgress();
+
+  if (!playerFrames) {
+    playerFrames = await playerFramesPromise;
+  }
 
   loginScreen.classList.add("hidden");
   ui.classList.remove("hidden");
@@ -178,6 +203,7 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
     cat.direction = spawnOverride.direction;
   }
   npcs = createNpcs();
+  mobs = await createMobs();
   objects = createObjects();
   showNotification(content.location.name);
   if (!options.skipSave) {
@@ -651,6 +677,20 @@ function createObjects() {
     .filter(Boolean);
 }
 
+async function createMobs() {
+  const mobsByType = new Map();
+  return Promise.all((content.mobs || []).map(async (mobData) => {
+    if (!mobsByType.has(mobData.type)) {
+      mobsByType.set(
+        mobData.type,
+        loadMobFrames(mobData.spriteBase, mobData.frameCount || 10)
+      );
+    }
+    const frames = await mobsByType.get(mobData.type);
+    return new Mob(mobData, frames, TILE_SIZE, collisionMap);
+  }));
+}
+
 function resolveNpcPosition(character, roadCluster) {
   if (character.positionStrategy === "largestRoadCenter") {
     const mid = roadCluster[Math.floor(roadCluster.length / 2)];
@@ -749,6 +789,7 @@ function update() {
       npc.update();
     }
   });
+  mobs.forEach((mob) => mob.update(cat));
 
   showHint = Boolean(findNearestInteractable()) && !inDialog;
 
@@ -764,6 +805,7 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mapBackground, 0, 0);
   drawObjectMarkers();
+  mobs.forEach((mob) => mob.draw(ctx));
   npcs.forEach((npc) => npc.draw(ctx));
 
   const frameImg = playerFrames[cat.direction][cat.frame];

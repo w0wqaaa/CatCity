@@ -1,4 +1,4 @@
-import { ASSET_PATHS } from "../config/gameConfig.js";
+import { ASSET_PATHS } from "../config/gameConfig.js?v=login-fix-1";
 
 const imageCache = new Map();
 
@@ -32,5 +32,20 @@ export async function loadPlayerFrames() {
     up: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_up`),
     right: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_right`),
     left: await loadFrames(`${ASSET_PATHS.characters.player.framePrefix}_left`),
+  };
+}
+
+export async function loadMobFrames(basePath, frameCount = 10) {
+  const loadFrames = async (state) => {
+    const frames = [];
+    for (let i = 0; i < frameCount; i++) {
+      frames.push(await loadImage(`${basePath}/${state}/${String(i).padStart(3, "0")}.png`));
+    }
+    return frames;
+  };
+
+  return {
+    idle: await loadFrames("idle"),
+    walk: await loadFrames("walk"),
   };
 }

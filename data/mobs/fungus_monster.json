@@ -1,0 +1,11 @@
+{
+  "id": "fungus_monster",
+  "name": "Грибной монстр",
+  "spriteBase": "assets/mobs/fungus_monster",
+  "frameCount": 10,
+  "width": 64,
+  "height": 64,
+  "speed": 0.7,
+  "roamRadius": 130,
+  "aggroRadius": 180
+}

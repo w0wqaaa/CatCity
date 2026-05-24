@@ -1,4 +1,4 @@
-import { NPC } from "./NPC.js";
+import { NPC } from "./NPC.js?v=login-fix-1";
 
 export class NPCGuard extends NPC {
   constructor(x, y, spritePath, tileSize, collisionMap, roadCluster) {

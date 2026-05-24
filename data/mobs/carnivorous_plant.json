@@ -1,0 +1,11 @@
+{
+  "id": "carnivorous_plant",
+  "name": "Плотоядное растение",
+  "spriteBase": "assets/mobs/carnivorous_plant",
+  "frameCount": 10,
+  "width": 64,
+  "height": 64,
+  "speed": 0.45,
+  "roamRadius": 95,
+  "aggroRadius": 150
+}

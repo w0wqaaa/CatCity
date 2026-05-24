@@ -25,6 +25,8 @@ export async function loadGameContent(locationId = "city") {
   const questIds = location.quests || [];
   const objectIds = location.objects || [];
   const itemIds = location.items || [];
+  const mobSpawns = location.mobs || [];
+  const mobTypeIds = [...new Set(mobSpawns.map((mob) => mob.type))];
   const characters = await loadByIds(
     characterIds,
     (id) => `data/characters/${id}.json`
@@ -41,6 +43,15 @@ export async function loadGameContent(locationId = "city") {
     itemIds,
     (id) => `data/items/${id}.json`
   );
+  const mobTypes = await loadByIds(
+    mobTypeIds,
+    (id) => `data/mobs/${id}.json`
+  );
+  const mobs = mobSpawns.map((spawn) => ({
+    ...mobTypes[spawn.type],
+    ...spawn,
+    type: spawn.type,
+  }));
 
   const dialogIds = new Set();
   Object.values(characters).forEach((character) => {
@@ -61,6 +72,7 @@ export async function loadGameContent(locationId = "city") {
     quests,
     objects,
     items,
+    mobs,
     dialogs,
   };
 }
