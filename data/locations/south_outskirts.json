@@ -29,7 +29,7 @@
     {
       "id": "south_garden_gate",
       "to": "overgrown_garden",
-      "area": { "x": 700, "y": 944, "width": 140, "height": 80 },
+      "area": { "x": 680, "y": 880, "width": 200, "height": 144 },
       "spawn": { "x": 768, "y": 120 }
     }
   ]

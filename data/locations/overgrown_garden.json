@@ -16,7 +16,7 @@
       "id": "north_gate",
       "to": "south_outskirts",
       "area": { "x": 700, "y": 0, "width": 140, "height": 72 },
-      "spawn": { "x": 768, "y": 940 }
+      "spawn": { "x": 768, "y": 840, "direction": "up" }
     }
   ]
 }
