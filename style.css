@@ -222,7 +222,8 @@ canvas {
   line-height: 1.4;
 }
 
-#playerBadge {
+#playerBadge,
+#playerStats {
   display: inline-block;
   background: rgba(0, 0, 0, 0.75);
   color: #ffda75;
@@ -230,6 +231,10 @@ canvas {
   border-radius: 4px;
   padding: 6px 10px;
   margin-right: 6px;
+}
+
+#playerStats {
+  color: #dff6ff;
 }
 
 /* === Общие элементы === */

@@ -14,6 +14,8 @@ export class Mob {
     this.speed = data.speed || 0.6;
     this.roamRadius = data.roamRadius || 120;
     this.aggroRadius = data.aggroRadius || 160;
+    this.maxHp = data.maxHp || data.hp || 3;
+    this.hp = data.hp || this.maxHp;
 
     this.state = "idle";
     this.frame = 0;
@@ -21,6 +23,11 @@ export class Mob {
     this.waitTicks = 0;
     this.target = null;
     this.facing = 1;
+  }
+
+  takeDamage(amount) {
+    this.hp = Math.max(0, this.hp - amount);
+    return this.hp <= 0;
   }
 
   update(player) {

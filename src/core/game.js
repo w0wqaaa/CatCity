@@ -2,9 +2,21 @@ import { loadImage, loadMobFrames, loadPlayerFrames } from "./assetLoader.js?v=l
 import { loadGameContent } from "./dataLoader.js?v=login-fix-1";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=login-fix-1";
-import { Mob } from "../entities/Mob.js?v=login-fix-1";
+import { Mob } from "../entities/Mob.js?v=attack-fix-1";
+import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=menu-hotkeys-1";
+import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=menu-hotkeys-1";
 
 const SAVE_VERSION = 1;
+const PLAYER_DEFAULT_STATS = {
+  hp: 10,
+  maxHp: 10,
+  mp: 5,
+  maxMp: 5,
+};
+const PLAYER_ATTACK_DAMAGE = 1;
+const PLAYER_ATTACK_RANGE = 48;
+const PLAYER_ATTACK_WIDTH = 48;
+const PLAYER_ATTACK_COOLDOWN = 350;
 
 if (window.location.search) {
   window.history.replaceState({}, "", window.location.pathname);
@@ -29,6 +41,7 @@ let keys = {};
 let questLog = [];
 let questStates = {};
 let inventory = {};
+let playerStats = { ...PLAYER_DEFAULT_STATS };
 let inDialog = false;
 let dialogIndex = 0;
 let dialogLines = [];
@@ -42,6 +55,7 @@ let currentUser = null;
 let currentLocationId = "city";
 let loopStarted = false;
 let lastAutosaveAt = 0;
+let lastAttackAt = 0;
 let playerFramesPromise = null;
 
 const loginScreen = document.getElementById("loginScreen");
@@ -50,6 +64,7 @@ const usernameInput = document.getElementById("usernameInput");
 const loginMessage = document.getElementById("loginMessage");
 const ui = document.getElementById("ui");
 const playerBadge = document.getElementById("playerBadge");
+const playerStatsBadge = document.getElementById("playerStats");
 const questsButton = document.getElementById("questsButton");
 const questsPanel = document.getElementById("questsPanel");
 const questsList = document.getElementById("questsList");
@@ -69,6 +84,8 @@ notification.classList.add("hidden");
 document.body.appendChild(notification);
 
 async function startGame() {
+  initMinimap();
+  initControlLegend();
   setupEventListeners();
   initLogin();
   playerFramesPromise = loadPlayerFrames();
@@ -82,7 +99,10 @@ async function startGame() {
 
 function setupEventListeners() {
   window.addEventListener("keydown", handleKey);
-  window.addEventListener("keyup", (e) => (keys[e.key] = false));
+  window.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+    keys[e.code] = false;
+  });
   window.addEventListener("beforeunload", saveProgress);
   nextDialog.addEventListener("click", nextDialogLine);
 
@@ -104,17 +124,9 @@ function setupEventListeners() {
     }
   });
 
-  questsButton.addEventListener("click", () => {
-    questsPanel.classList.toggle("visible");
-    inventoryPanel.classList.remove("visible");
-    updateQuestList();
-  });
+  questsButton.addEventListener("click", toggleQuestPanel);
 
-  inventoryButton.addEventListener("click", () => {
-    inventoryPanel.classList.toggle("visible");
-    questsPanel.classList.remove("visible");
-    updateInventoryList();
-  });
+  inventoryButton.addEventListener("click", toggleInventoryPanel);
 
   if (closeQuests) {
     closeQuests.addEventListener("click", () => {
@@ -151,6 +163,7 @@ async function login(username) {
 
   loginScreen.classList.add("hidden");
   ui.classList.remove("hidden");
+  updatePlayerStatsUi();
   playerBadge.textContent = `Игрок: ${username}`;
   updateQuestList();
   updateInventoryList();
@@ -172,6 +185,8 @@ function logout() {
   dialogBox.classList.add("hidden");
   ui.classList.add("hidden");
   loginScreen.classList.remove("hidden");
+  updateMinimap();
+  updateControlLegend();
   loginMessage.textContent = "Прогресс сохранён. Можно войти другим именем.";
   usernameInput.focus();
 }
@@ -255,6 +270,7 @@ function loadProgress() {
   questStates = save?.questStates || {};
   questLog = save?.questLog || [];
   inventory = save?.inventory || {};
+  playerStats = normalizePlayerStats(save?.playerStats);
 }
 
 function saveProgress() {
@@ -274,6 +290,7 @@ function saveProgress() {
     questStates,
     questLog,
     inventory,
+    playerStats,
     savedAt: new Date().toISOString(),
   };
   localStorage.setItem(getSaveKey(), JSON.stringify(save));
@@ -292,25 +309,191 @@ function handleKey(e) {
   if (!currentUser || !cat) {
     return;
   }
-  keys[e.key] = true;
-  const isE = e.code === "KeyE" || e.key === "e" || e.key === "E";
-  if (isE && !inDialog) {
-    tryTalk();
+
+  if (e.code === "Escape") {
+    if (closeMenus()) {
+      e.preventDefault();
+    }
+    return;
   }
+
+  if (e.code === "Enter" && inDialog) {
+    e.preventDefault();
+    nextDialogLine();
+    return;
+  }
+
+  if (inDialog) {
+    return;
+  }
+
+  if (e.code === "KeyQ") {
+    e.preventDefault();
+    toggleQuestPanel();
+    return;
+  }
+
+  if (e.code === "KeyI") {
+    e.preventDefault();
+    toggleInventoryPanel();
+    return;
+  }
+
+  if (e.code === "KeyM") {
+    e.preventDefault();
+    toggleMinimap();
+    return;
+  }
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (!e.repeat) {
+      attackMobs();
+    }
+    return;
+  }
+
+  keys[e.key] = true;
+  keys[e.code] = true;
+  const isE = e.code === "KeyE" || e.key === "e" || e.key === "E";
+  if (isE) {
+    if (!tryTalk()) {
+      tryLocationExit();
+    }
+  }
+}
+
+function toggleQuestPanel() {
+  questsPanel.classList.toggle("visible");
+  inventoryPanel.classList.remove("visible");
+  updateQuestList();
+}
+
+function toggleInventoryPanel() {
+  inventoryPanel.classList.toggle("visible");
+  questsPanel.classList.remove("visible");
+  updateInventoryList();
+}
+
+function closeMenus() {
+  const hadOpenMenu = questsPanel.classList.contains("visible") || inventoryPanel.classList.contains("visible");
+  questsPanel.classList.remove("visible");
+  inventoryPanel.classList.remove("visible");
+  return hadOpenMenu;
+}
+
+function normalizePlayerStats(stats = {}) {
+  const savedStats = stats || {};
+  return {
+    hp: Number.isFinite(savedStats.hp) ? savedStats.hp : PLAYER_DEFAULT_STATS.hp,
+    maxHp: Number.isFinite(savedStats.maxHp) ? savedStats.maxHp : PLAYER_DEFAULT_STATS.maxHp,
+    mp: Number.isFinite(savedStats.mp) ? savedStats.mp : PLAYER_DEFAULT_STATS.mp,
+    maxMp: Number.isFinite(savedStats.maxMp) ? savedStats.maxMp : PLAYER_DEFAULT_STATS.maxMp,
+  };
+}
+
+function updatePlayerStatsUi() {
+  if (!playerStatsBadge) {
+    return;
+  }
+  playerStatsBadge.textContent = `HP ${playerStats.hp}/${playerStats.maxHp} MP ${playerStats.mp}/${playerStats.maxMp}`;
+}
+
+function attackMobs() {
+  const now = Date.now();
+  if (now - lastAttackAt < PLAYER_ATTACK_COOLDOWN) {
+    return;
+  }
+  lastAttackAt = now;
+
+  const target = mobs.find(isMobInAttackRange);
+  if (!target) {
+    return;
+  }
+
+  const defeated = target.takeDamage(PLAYER_ATTACK_DAMAGE);
+  if (defeated) {
+    mobs = mobs.filter((mob) => mob !== target);
+    showNotification("Моб побеждён");
+  } else {
+    showNotification(`Попадание: ${target.hp}/${target.maxHp}`);
+  }
+}
+
+function isMobInAttackRange(mob) {
+  return rectanglesOverlap(getAttackBox(), getMobBox(mob));
+}
+
+function getAttackBox() {
+  const direction = getDirectionVector(cat.direction);
+  const horizontal = direction.x !== 0;
+  const width = horizontal ? PLAYER_ATTACK_RANGE : PLAYER_ATTACK_WIDTH;
+  const height = horizontal ? PLAYER_ATTACK_WIDTH : PLAYER_ATTACK_RANGE;
+  const centerX = cat.x + direction.x * (PLAYER_ATTACK_RANGE / 2);
+  const centerY = cat.y + direction.y * (PLAYER_ATTACK_RANGE / 2);
+
+  return {
+    x: centerX - width / 2,
+    y: centerY - height / 2,
+    width,
+    height,
+  };
+}
+
+function getMobBox(mob) {
+  return {
+    x: mob.x - mob.width / 2,
+    y: mob.y - mob.height / 2,
+    width: mob.width,
+    height: mob.height,
+  };
+}
+
+function rectanglesOverlap(a, b) {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+function getDirectionVector(direction) {
+  if (direction === "up") {
+    return { x: 0, y: -1 };
+  }
+  if (direction === "left") {
+    return { x: -1, y: 0 };
+  }
+  if (direction === "right") {
+    return { x: 1, y: 0 };
+  }
+  return { x: 0, y: 1 };
 }
 
 function tryTalk() {
   const interactable = findNearestInteractable();
   if (!interactable) {
-    return;
+    return false;
   }
 
   if (interactable.type === "npc") {
     startDialog(interactable.entity);
-    return;
+    return true;
   }
 
   startObjectDialog(interactable.entity);
+  return true;
+}
+
+function tryLocationExit() {
+  const exit = findNearbyExit();
+  if (!exit || isTransitioning) {
+    return false;
+  }
+
+  switchLocation(exit.to, exit.spawn);
+  return true;
 }
 
 function startDialog(npc) {
@@ -586,6 +769,19 @@ function checkLocationExits() {
   }
 }
 
+function findNearbyExit() {
+  return content.location.exits?.find(({ area }) => isPointInArea(cat, expandArea(area, INTERACT_RADIUS)));
+}
+
+function expandArea(area, padding) {
+  return {
+    x: area.x - padding,
+    y: area.y - padding,
+    width: area.width + padding * 2,
+    height: area.height + padding * 2,
+  };
+}
+
 function isPointInArea(point, area) {
   return (
     point.x >= area.x &&
@@ -751,19 +947,19 @@ function update() {
   const prevY = cat.y;
   cat.moving = false;
 
-  if (keys.ArrowUp) {
+  if (keys.ArrowUp || keys.KeyW) {
     cat.y -= cat.speed;
     cat.direction = "up";
     cat.moving = true;
-  } else if (keys.ArrowDown) {
+  } else if (keys.ArrowDown || keys.KeyS) {
     cat.y += cat.speed;
     cat.direction = "down";
     cat.moving = true;
-  } else if (keys.ArrowLeft) {
+  } else if (keys.ArrowLeft || keys.KeyA) {
     cat.x -= cat.speed;
     cat.direction = "left";
     cat.moving = true;
-  } else if (keys.ArrowRight) {
+  } else if (keys.ArrowRight || keys.KeyD) {
     cat.x += cat.speed;
     cat.direction = "right";
     cat.moving = true;
@@ -821,9 +1017,170 @@ function draw() {
     drawPulsingHighlight(activeQuest);
   }
 
+  drawExitMarkers();
+  drawQuestTurnInMarkers();
+
   if (showHint) {
     drawInteractionHint();
   }
+
+  updateMinimap({
+    collisionMap,
+    tileSize: TILE_SIZE,
+    player: currentUser ? cat : null,
+    npcs,
+    mobs,
+    exits: content.location.exits || [],
+  });
+  updateControlLegend(getControlLegendContext());
+}
+
+function getControlLegendContext() {
+  const interactable = !inDialog ? findNearestInteractable() : null;
+  return {
+    isGameActive: Boolean(currentUser && cat),
+    isDialogOpen: inDialog,
+    nearbyNPC: interactable?.type === "npc",
+    nearbyInteractable: Boolean(interactable),
+    nearbyExit: !inDialog && Boolean(findNearbyExit()),
+    nearbyMob: !inDialog && mobs.some(isMobInAttackRange),
+    minimapEnabled: isMinimapEnabled(),
+    isMenuOpen: questsPanel.classList.contains("visible") || inventoryPanel.classList.contains("visible"),
+    playerCanAttack: !inDialog,
+  };
+}
+
+function drawExitMarkers() {
+  const exits = content.location.exits || [];
+  if (!exits.length) {
+    return;
+  }
+
+  const pulse = 0.45 + Math.sin(highlightPulse * 3) * 0.25;
+  const nearbyExit = findNearbyExit();
+
+  exits.forEach((exit) => {
+    const { area } = exit;
+    const isNearby = nearbyExit?.id === exit.id;
+    const centerX = area.x + area.width / 2;
+    const centerY = area.y + area.height / 2;
+
+    ctx.save();
+    ctx.fillStyle = isNearby
+      ? `rgba(90, 245, 120, ${0.24 + pulse * 0.15})`
+      : `rgba(70, 210, 105, ${0.14 + pulse * 0.08})`;
+    ctx.strokeStyle = isNearby
+      ? `rgba(196, 255, 165, ${0.75 + pulse * 0.2})`
+      : `rgba(105, 230, 120, ${0.55 + pulse * 0.2})`;
+    ctx.lineWidth = isNearby ? 4 : 3;
+    ctx.setLineDash([12, 8]);
+    ctx.fillRect(area.x, area.y, area.width, area.height);
+    ctx.strokeRect(area.x + 2, area.y + 2, area.width - 4, area.height - 4);
+    ctx.setLineDash([]);
+
+    drawExitArrow(centerX, centerY, area, isNearby);
+
+    if (isNearby) {
+      ctx.font = "bold 18px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+      ctx.lineWidth = 4;
+      ctx.strokeText("E", centerX, centerY - 24);
+      ctx.fillText("E", centerX, centerY - 24);
+    }
+
+    ctx.restore();
+  });
+}
+
+function drawExitArrow(centerX, centerY, area, isNearby) {
+  const size = isNearby ? 18 : 14;
+  const direction = getExitDirection(area);
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  if (direction === "down") {
+    ctx.rotate(Math.PI);
+  } else if (direction === "left") {
+    ctx.rotate(-Math.PI / 2);
+  } else if (direction === "right") {
+    ctx.rotate(Math.PI / 2);
+  }
+
+  ctx.fillStyle = isNearby ? "rgba(221, 255, 160, 0.95)" : "rgba(165, 245, 140, 0.82)";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -size);
+  ctx.lineTo(size * 0.8, size * 0.5);
+  ctx.lineTo(-size * 0.8, size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function getExitDirection(area) {
+  const centerX = area.x + area.width / 2;
+  const centerY = area.y + area.height / 2;
+  const distTop = centerY;
+  const distBottom = canvas.height - centerY;
+  const distLeft = centerX;
+  const distRight = canvas.width - centerX;
+  const min = Math.min(distTop, distBottom, distLeft, distRight);
+
+  if (min === distBottom) {
+    return "down";
+  }
+  if (min === distLeft) {
+    return "left";
+  }
+  if (min === distRight) {
+    return "right";
+  }
+  return "up";
+}
+
+function drawQuestTurnInMarkers() {
+  const readyNpcs = npcs.filter(canTurnInQuestToNpc);
+  if (!readyNpcs.length) {
+    return;
+  }
+
+  const pulse = 0.55 + Math.sin(highlightPulse * 4) * 0.35;
+  readyNpcs.forEach((npc) => {
+    const markerY = npc.y - npc.height / 2 - 18;
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 232, 90, ${0.65 + pulse * 0.25})`;
+    ctx.fillStyle = `rgba(255, 226, 95, ${0.16 + pulse * 0.16})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(npc.x, npc.y + npc.height * 0.22, npc.width * 0.38, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = "bold 28px monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffe45d";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+    ctx.lineWidth = 5;
+    ctx.strokeText("!", npc.x, markerY);
+    ctx.fillText("!", npc.x, markerY);
+    ctx.restore();
+  });
+}
+
+function canTurnInQuestToNpc(npc) {
+  return (npc.data.quests || []).some((questId) => {
+    const quest = content.quests[questId];
+    return (
+      quest &&
+      questStates[questId] === "completed" &&
+      hasRequiredItems(quest.turnIn?.requiresItems || [])
+    );
+  });
 }
 
 function drawObjectMarkers() {
