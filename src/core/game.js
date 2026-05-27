@@ -1,4 +1,4 @@
-import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=sega16-v2";
+import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=attack-anim-1";
 import { loadGameContent, loadJson } from "./dataLoader.js?v=sega16-v2";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
 import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
@@ -19,8 +19,10 @@ const PLAYER_ATTACK_DAMAGE = 1;
 const PLAYER_ATTACK_RANGE = 48;
 const PLAYER_ATTACK_WIDTH = 48;
 const PLAYER_ATTACK_COOLDOWN = 350;
+const PLAYER_ATTACK_TICKS = 20;
+const PLAYER_ATTACK_FRAME_TICKS = 5;
 const PLAYER_RUN_MULTIPLIER = 1.7;
-const ART_VERSION = "sega16-v2";
+const ART_VERSION = "attack-anim-1";
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const RUN_KEYS = new Set(["ShiftLeft", "ShiftRight"]);
 const KEY_ALIASES = {
@@ -286,9 +288,20 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
     speed: 2,
     tick: 0,
     moving: false,
+    attacking: false,
+    attackTicks: 0,
+    attackFrame: 0,
   };
 
-  cat = cat ? { ...cat, x: nextCat.x, y: nextCat.y, moving: false } : nextCat;
+  cat = cat ? {
+    ...cat,
+    x: nextCat.x,
+    y: nextCat.y,
+    moving: false,
+    attacking: false,
+    attackTicks: 0,
+    attackFrame: 0,
+  } : nextCat;
   if (spawnOverride?.direction) {
     cat.direction = spawnOverride.direction;
   }
@@ -596,6 +609,7 @@ function attackMobs() {
     return;
   }
   lastAttackAt = now;
+  startPlayerAttackAnimation();
 
   const target = mobs.find(isMobInAttackRange);
   if (!target) {
@@ -609,6 +623,12 @@ function attackMobs() {
   } else {
     showNotification(`Попадание: ${target.hp}/${target.maxHp}`);
   }
+}
+
+function startPlayerAttackAnimation() {
+  cat.attacking = true;
+  cat.attackTicks = PLAYER_ATTACK_TICKS;
+  cat.attackFrame = 0;
 }
 
 function defeatMob(mob) {
@@ -1350,6 +1370,8 @@ function update() {
     cat.y = prevY;
   }
 
+  updatePlayerAttackAnimation();
+
   if (cat.moving) {
     cat.tick++;
     if (cat.tick % (isPlayerRunning() ? 6 : 10) === 0) {
@@ -1393,7 +1415,7 @@ function draw() {
   mobs.forEach((mob) => mob.draw(ctx));
   npcs.forEach((npc) => npc.draw(ctx));
 
-  const frameImg = playerFrames[cat.direction][cat.frame];
+  const frameImg = getPlayerFrame();
   const w = frameImg.width * cat.scale;
   const h = frameImg.height * cat.scale;
   ctx.drawImage(frameImg, cat.x - w / 2, cat.y - h / 2, w, h);
@@ -1424,6 +1446,36 @@ function draw() {
     exits: content.location.exits || [],
   });
   updateControlLegend(getControlLegendContext());
+}
+
+function updatePlayerAttackAnimation() {
+  if (!cat.attacking) {
+    return;
+  }
+
+  cat.attackTicks = Math.max(0, cat.attackTicks - 1);
+  const elapsed = PLAYER_ATTACK_TICKS - cat.attackTicks;
+  const attackFrames = playerFrames.attack?.[cat.direction] || [];
+  cat.attackFrame = Math.max(0, Math.min(
+    Math.max(0, attackFrames.length - 1),
+    Math.floor(elapsed / PLAYER_ATTACK_FRAME_TICKS)
+  ));
+
+  if (cat.attackTicks === 0) {
+    cat.attacking = false;
+    cat.attackFrame = 0;
+  }
+}
+
+function getPlayerFrame() {
+  if (cat.attacking) {
+    const attackFrames = playerFrames.attack?.[cat.direction];
+    if (attackFrames?.length) {
+      return attackFrames[cat.attackFrame % attackFrames.length];
+    }
+  }
+
+  return playerFrames.walk?.[cat.direction]?.[cat.frame] || playerFrames[cat.direction][cat.frame];
 }
 
 function isPlayerRunning() {

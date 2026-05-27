@@ -29,6 +29,7 @@ export class Mob {
     this.animationTimer = 0;
     this.currentDirection = "down";
     this.animationSpeed = 8;
+    this.attackAnimationSpeed = 5;
     this.attackTicks = 0;
     this.waitTicks = 0;
     this.target = null;
@@ -50,13 +51,14 @@ export class Mob {
 
     if (distanceToPlayer <= this.attackRange) {
       this.currentDirection = getDirectionName(player.x - this.x, player.y - this.y);
-      this.animate("attack");
       const now = Date.now();
       if (now - this.lastAttackAt >= this.attackCooldown) {
         this.lastAttackAt = now;
-        this.attackTicks = 18;
+        this.attackTicks = 24;
+        this.animate("attack");
         return { type: "attack", damage: this.damage };
       }
+      this.animate("idle");
       return null;
     }
 
@@ -199,7 +201,8 @@ export class Mob {
     }
 
     this.animationTimer++;
-    if (this.animationTimer >= this.animationSpeed) {
+    const speed = this.animationState === "attack" ? this.attackAnimationSpeed : this.animationSpeed;
+    if (this.animationTimer >= speed) {
       this.animationTimer = 0;
       this.currentFrame = (this.currentFrame + 1) % frames.length;
     }

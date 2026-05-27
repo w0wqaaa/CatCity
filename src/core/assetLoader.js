@@ -3,7 +3,7 @@ import { ASSET_PATHS } from "../config/gameConfig.js?v=login-fix-1";
 const imageCache = new Map();
 const DIRECTIONS = ["down", "up", "left", "right"];
 const FRAME_SIZE = 32;
-const SPRITESHEET_VERSION = "sega16-v2";
+const SPRITESHEET_VERSION = "attack-anim-1";
 
 export async function loadImage(src) {
   if (imageCache.has(src)) {
@@ -22,22 +22,37 @@ export async function loadImage(src) {
 }
 
 export async function loadPlayerFrames(character = "boy") {
-  const framePrefix = character === "girl"
+  const walkPrefix = character === "girl"
     ? "assets/characters/player_girl/cat_girl_walk"
     : ASSET_PATHS.characters.player.framePrefix;
-  const loadFrames = async (prefix) => {
+  const attackPrefix = character === "girl"
+    ? "assets/characters/player_girl/cat_girl_attack"
+    : "assets/characters/player/cat_attack";
+  const loadFrames = async (prefix, count) => {
     const frames = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= count; i++) {
       frames.push(await loadImage(`${prefix}_${i}.png?v=${SPRITESHEET_VERSION}`));
     }
     return frames;
   };
 
+  const walk = {
+    down: await loadFrames(`${walkPrefix}_down`, 3),
+    up: await loadFrames(`${walkPrefix}_up`, 3),
+    right: await loadFrames(`${walkPrefix}_right`, 3),
+    left: await loadFrames(`${walkPrefix}_left`, 3),
+  };
+  const attack = {
+    down: await loadFrames(`${attackPrefix}_down`, 4),
+    up: await loadFrames(`${attackPrefix}_up`, 4),
+    right: await loadFrames(`${attackPrefix}_right`, 4),
+    left: await loadFrames(`${attackPrefix}_left`, 4),
+  };
+
   return {
-    down: await loadFrames(`${framePrefix}_down`),
-    up: await loadFrames(`${framePrefix}_up`),
-    right: await loadFrames(`${framePrefix}_right`),
-    left: await loadFrames(`${framePrefix}_left`),
+    walk,
+    attack,
+    ...walk,
   };
 }
 

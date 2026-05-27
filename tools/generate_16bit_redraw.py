@@ -315,14 +315,31 @@ def draw_character_frame(role: str, direction: str, frame: int, state: str) -> I
     elif role == "mechanic":
         d.rectangle((cx - 7, cy - 7 + bob, cx + 7, cy - 5 + bob), fill=(93, 172, 184, 255))
 
+    if state == "attack":
+        slash = (244, 225, 157, 255)
+        if direction == "right":
+            d.arc((cx + 4, cy - 11 + bob, cx + 20, cy + 8 + bob), 295, 65, fill=slash, width=2)
+            d.line((cx + 8, cy + 2 + bob, cx + 15, cy - 5 + bob), fill=PAL["outline"], width=2)
+        elif direction == "left":
+            d.arc((cx - 20, cy - 11 + bob, cx - 4, cy + 8 + bob), 115, 245, fill=slash, width=2)
+            d.line((cx - 8, cy + 2 + bob, cx - 15, cy - 5 + bob), fill=PAL["outline"], width=2)
+        elif direction == "up":
+            d.arc((cx - 10, cy - 22 + bob, cx + 10, cy - 5 + bob), 200, 340, fill=slash, width=2)
+            d.line((cx, cy - 8 + bob, cx, cy - 17 + bob), fill=PAL["outline"], width=2)
+        else:
+            d.arc((cx - 11, cy + 4 + bob, cx + 11, cy + 21 + bob), 20, 160, fill=slash, width=2)
+            d.line((cx, cy + 7 + bob, cx, cy + 17 + bob), fill=PAL["outline"], width=2)
+
     return img
 
 
-def save_player_frames(role: str, out_dir: Path, prefix: str) -> None:
+def save_player_frames(role: str, out_dir: Path, walk_prefix: str, attack_prefix: str) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     for direction in DIRECTIONS:
         for frame in range(3):
-            draw_character_frame(role, direction, frame, "walk").save(out_dir / f"{prefix}_{direction}_{frame + 1}.png")
+            draw_character_frame(role, direction, frame, "walk").save(out_dir / f"{walk_prefix}_{direction}_{frame + 1}.png")
+        for frame in range(4):
+            draw_character_frame(role, direction, frame, "attack").save(out_dir / f"{attack_prefix}_{direction}_{frame + 1}.png")
 
 
 def save_character_sheets(role: str, folder: Path, name: str) -> None:
@@ -400,8 +417,8 @@ def main() -> None:
     for kind, (size, filename) in objects.items():
         save_object(kind, size, filename)
 
-    save_player_frames("player", ROOT / "assets" / "characters" / "player", "cat_walk")
-    save_player_frames("player_girl", ROOT / "assets" / "characters" / "player_girl", "cat_girl_walk")
+    save_player_frames("player", ROOT / "assets" / "characters" / "player", "cat_walk", "cat_attack")
+    save_player_frames("player_girl", ROOT / "assets" / "characters" / "player_girl", "cat_girl_walk", "cat_girl_attack")
 
     for role in ["guard", "spice_merchant", "baker", "merchant", "herbalist", "road_scout", "beekeeper", "mechanic", "old_cat"]:
         save_character_sheets(role, ROOT / "assets" / "npcs" / role, role)
