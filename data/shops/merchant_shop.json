@@ -1,0 +1,17 @@
+{
+  "id": "merchant_shop",
+  "items": [
+    {
+      "itemId": "small_hp_potion",
+      "price": 5
+    },
+    {
+      "itemId": "small_mp_potion",
+      "price": 5
+    },
+    {
+      "itemId": "herb",
+      "price": 3
+    }
+  ]
+}

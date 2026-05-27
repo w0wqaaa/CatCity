@@ -70,6 +70,54 @@ canvas {
   display: block;
 }
 
+#shopPanel {
+  position: fixed;
+  top: 96px;
+  right: 24px;
+  width: 300px;
+  background: rgba(14, 13, 12, 0.92);
+  border: 1px solid #745f42;
+  border-radius: 6px;
+  padding: 14px;
+  color: #fff;
+  font-family: monospace;
+  z-index: 18;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+#shopPanel.hidden {
+  display: none;
+}
+
+#shopPanel h3 {
+  margin: 0 0 12px;
+  color: #ffda75;
+  text-align: center;
+}
+
+.shop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.22);
+}
+
+.shop-row button,
+#closeShop {
+  background: #333;
+  color: #eee;
+  border: 1px solid #777;
+  border-radius: 4px;
+  padding: 5px 9px;
+}
+
+#closeShop {
+  width: 100%;
+  margin-top: 12px;
+}
+
 #questsPanel h3,
 #inventoryPanel h3 {
   margin-top: 0;
@@ -204,6 +252,51 @@ canvas {
   font-family: monospace;
   font-size: 15px;
   margin-bottom: 12px;
+}
+
+.character-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 0 0 12px;
+}
+
+.character-select legend {
+  color: #ffda75;
+  padding: 0 6px;
+}
+
+.character-option {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.character-option:has(input:checked) {
+  border-color: #ffda75;
+  background: rgba(255, 218, 117, 0.16);
+}
+
+.character-option input {
+  width: auto;
+  box-sizing: content-box;
+  margin: 0;
+  padding: 0;
+}
+
+.character-option img {
+  width: 42px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .login-card button {

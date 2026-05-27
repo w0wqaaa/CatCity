@@ -1,0 +1,10 @@
+{
+  "id": "merchant_shop_intro",
+  "stages": {
+    "none": {
+      "lines": [
+        "Welcome. Take a look at the shelves."
+      ]
+    }
+  }
+}

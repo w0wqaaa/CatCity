@@ -38,6 +38,7 @@ export function updateControlLegend(context = null) {
 
   const lines = [
     "WASD / стрелки — движение",
+    "Shift — бег",
     "Q — квесты",
     "I — инвентарь",
     context.minimapEnabled ? "M — скрыть миникарту" : "M — показать миникарту",

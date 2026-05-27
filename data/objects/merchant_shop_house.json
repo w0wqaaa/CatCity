@@ -1,0 +1,21 @@
+{
+  "id": "merchant_shop_house",
+  "name": "Merchant Shop",
+  "type": "building",
+  "position": {
+    "x": 520,
+    "y": 390
+  },
+  "radius": 130,
+  "interactable": true,
+  "actionType": "enterLocation",
+  "to": "merchant_shop",
+  "spawn": {
+    "x": 768,
+    "y": 840,
+    "direction": "up"
+  },
+  "lines": [
+    "The shop door is open."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "small_mp_potion",
+  "name": "Small MP Potion",
+  "description": "Restores a small amount of MP.",
+  "type": "consumable",
+  "effect": "restoreMp",
+  "value": 3,
+  "icon": "mp_potion"
+}

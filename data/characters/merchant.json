@@ -1,0 +1,14 @@
+{
+  "id": "merchant",
+  "name": "Merchant",
+  "type": "merchant",
+  "sprite": "assets/characters/spice_merchant/cat_spice_merchant.png",
+  "position": {
+    "x": 768,
+    "y": 500
+  },
+  "movement": "static",
+  "dialog": "merchant_shop_intro",
+  "shop": "merchant_shop",
+  "quests": []
+}

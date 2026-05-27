@@ -14,12 +14,22 @@ export class Mob {
     this.speed = data.speed || 0.6;
     this.roamRadius = data.roamRadius || 120;
     this.aggroRadius = data.aggroRadius || 160;
+    this.attackRange = data.attackRange || 42;
+    this.damage = data.damage || 1;
+    this.attackCooldown = data.attackCooldownMs || data.attackCooldown || 1000;
+    this.lastAttackAt = 0;
     this.maxHp = data.maxHp || data.hp || 3;
     this.hp = data.hp || this.maxHp;
 
     this.state = "idle";
     this.frame = 0;
     this.tick = 0;
+    this.animationState = "idle";
+    this.currentFrame = 0;
+    this.animationTimer = 0;
+    this.currentDirection = "down";
+    this.animationSpeed = 8;
+    this.attackTicks = 0;
     this.waitTicks = 0;
     this.target = null;
     this.facing = 1;
@@ -32,17 +42,35 @@ export class Mob {
 
   update(player) {
     const distanceToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
+    if (this.attackTicks > 0) {
+      this.attackTicks--;
+      this.animate("attack");
+      return null;
+    }
+
+    if (distanceToPlayer <= this.attackRange) {
+      this.currentDirection = getDirectionName(player.x - this.x, player.y - this.y);
+      this.animate("attack");
+      const now = Date.now();
+      if (now - this.lastAttackAt >= this.attackCooldown) {
+        this.lastAttackAt = now;
+        this.attackTicks = 18;
+        return { type: "attack", damage: this.damage };
+      }
+      return null;
+    }
+
     if (distanceToPlayer <= this.aggroRadius) {
       this.moveToward(player.x, player.y, this.speed);
       this.animate("walk");
-      return;
+      return null;
     }
 
     if (this.waitTicks > 0) {
       this.waitTicks--;
       this.state = "idle";
       this.animate("idle");
-      return;
+      return null;
     }
 
     if (!this.target || Math.hypot(this.target.x - this.x, this.target.y - this.y) < 4) {
@@ -57,11 +85,29 @@ export class Mob {
         this.waitTicks = 45;
       }
     }
+    return null;
   }
 
   draw(ctx) {
+    const frame = this.getFrame();
+    if (frame?.sx !== undefined) {
+      ctx.drawImage(
+        frame.image,
+        frame.sx,
+        frame.sy,
+        frame.sw,
+        frame.sh,
+        this.x - this.width / 2,
+        this.y - this.height / 2,
+        this.width,
+        this.height
+      );
+      this.drawHealthBar(ctx);
+      return;
+    }
+
     const frames = this.frames[this.state] || this.frames.idle;
-    const image = frames[this.frame % frames.length];
+    const image = frame || frames[this.frame % frames.length];
 
     ctx.save();
     if (this.facing < 0) {
@@ -70,6 +116,24 @@ export class Mob {
     } else {
       ctx.drawImage(image, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
     }
+    ctx.restore();
+    this.drawHealthBar(ctx);
+  }
+
+  drawHealthBar(ctx) {
+    const width = 36;
+    const height = 5;
+    const x = this.x - width / 2;
+    const y = this.y - this.height / 2 - 10;
+    const ratio = Math.max(0, this.hp / this.maxHp);
+
+    ctx.save();
+    ctx.fillStyle = "rgba(18, 18, 18, 0.85)";
+    ctx.fillRect(x - 1, y - 1, width + 2, height + 2);
+    ctx.fillStyle = "rgba(90, 24, 24, 0.95)";
+    ctx.fillRect(x, y, width, height);
+    ctx.fillStyle = "rgba(220, 58, 54, 0.98)";
+    ctx.fillRect(x, y, width * ratio, height);
     ctx.restore();
   }
 
@@ -92,6 +156,7 @@ export class Mob {
     }
 
     this.facing = dx < 0 ? -1 : 1;
+    this.currentDirection = getDirectionName(dx, dy);
     this.x = nextX;
     this.y = nextY;
     return true;
@@ -115,14 +180,39 @@ export class Mob {
   animate(state) {
     if (this.state !== state) {
       this.state = state;
+      this.animationState = state;
       this.frame = 0;
+      this.currentFrame = 0;
       this.tick = 0;
+      this.animationTimer = 0;
     }
 
     this.tick++;
-    if (this.tick % 8 === 0) {
+    const legacyFrames = Array.isArray(this.frames[this.state]) ? this.frames[this.state] : null;
+    if (legacyFrames && this.tick % 8 === 0) {
       this.frame = (this.frame + 1) % this.frames[this.state].length;
     }
+
+    const frames = this.frames?.[this.animationState]?.[this.currentDirection];
+    if (!frames?.length) {
+      return;
+    }
+
+    this.animationTimer++;
+    if (this.animationTimer >= this.animationSpeed) {
+      this.animationTimer = 0;
+      this.currentFrame = (this.currentFrame + 1) % frames.length;
+    }
+  }
+
+  getFrame() {
+    const directionalFrames = this.frames?.[this.animationState]?.[this.currentDirection];
+    if (directionalFrames?.length) {
+      return directionalFrames[this.currentFrame % directionalFrames.length];
+    }
+
+    const frames = this.frames[this.state] || this.frames.idle;
+    return frames[this.frame % frames.length];
   }
 
   isBlocked(x, y) {
@@ -130,4 +220,11 @@ export class Mob {
     const tileY = Math.floor((y + 10) / this.tileSize);
     return this.collisionMap[tileY]?.[tileX] !== 0;
   }
+}
+
+function getDirectionName(dx, dy) {
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx >= 0 ? "right" : "left";
+  }
+  return dy >= 0 ? "down" : "up";
 }

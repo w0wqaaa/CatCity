@@ -1,8 +1,8 @@
-import { NPC } from "./NPC.js?v=login-fix-1";
+import { NPC } from "./NPC.js?v=spritesheet-combat-1";
 
 export class NPCGuard extends NPC {
-  constructor(x, y, spritePath, tileSize, collisionMap, roadCluster) {
-    super(x, y, spritePath, tileSize);
+  constructor(x, y, spritePath, tileSize, collisionMap, roadCluster, frames = null) {
+    super(x, y, spritePath, tileSize, frames);
 
     this.collisionMap = collisionMap;
     this.roadCluster = roadCluster;
@@ -18,6 +18,7 @@ export class NPCGuard extends NPC {
     const elapsed = now - this.stateStart;
 
     if (this.state === "wait") {
+      this.setAnimationState("idle");
       if (elapsed >= this.waitDuration) {
         this.state = "walk";
         this.stateStart = now;
@@ -29,6 +30,7 @@ export class NPCGuard extends NPC {
     if (this.state === "walk") {
       if (elapsed >= this.walkDuration) {
         this.state = "wait";
+        this.setAnimationState("idle");
         this.stateStart = now;
         return;
       }
@@ -56,7 +58,9 @@ export class NPCGuard extends NPC {
           this.x += (dx / dist) * this.speed;
           this.y += (dy / dist) * this.speed;
         }
+        this.setAnimationState("walk");
       } else {
+        this.setAnimationState("idle");
         this.pickNewDirection();
       }
     }

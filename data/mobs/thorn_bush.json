@@ -1,0 +1,22 @@
+{
+  "id": "thorn_bush",
+  "name": "Thorn Bush",
+  "spriteBase": "assets/mobs/carnivorous_plant",
+  "spriteSheetName": "carnivorous_plant",
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4,
+  "width": 64,
+  "height": 64,
+  "maxHp": 6,
+  "hp": 6,
+  "damage": 1,
+  "speed": 0.5,
+  "roamRadius": 105,
+  "aggroRadius": 165,
+  "attackRange": 44,
+  "attackCooldownMs": 1000,
+  "goldReward": 5,
+  "respawnTimeMs": 8000,
+  "difficulty": "normal"
+}

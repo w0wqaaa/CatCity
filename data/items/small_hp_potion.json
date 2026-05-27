@@ -1,0 +1,9 @@
+{
+  "id": "small_hp_potion",
+  "name": "Small HP Potion",
+  "description": "Restores a small amount of HP.",
+  "type": "consumable",
+  "effect": "restoreHp",
+  "value": 5,
+  "icon": "hp_potion"
+}

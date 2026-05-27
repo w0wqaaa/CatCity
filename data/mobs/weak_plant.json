@@ -1,0 +1,22 @@
+{
+  "id": "weak_plant",
+  "name": "Weak Plant",
+  "spriteBase": "assets/mobs/carnivorous_plant",
+  "spriteSheetName": "carnivorous_plant",
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4,
+  "width": 60,
+  "height": 60,
+  "maxHp": 3,
+  "hp": 3,
+  "damage": 1,
+  "speed": 0.42,
+  "roamRadius": 90,
+  "aggroRadius": 145,
+  "attackRange": 42,
+  "attackCooldownMs": 1100,
+  "goldReward": 2,
+  "respawnTimeMs": 5000,
+  "difficulty": "weak"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "merchant_shop",
+  "name": "Merchant Shop",
+  "map": "assets/maps/merchant_shop/background.png",
+  "collisionMap": "src/maps/merchantShopCollisionMap.js",
+  "characters": ["merchant"],
+  "quests": [],
+  "objects": [],
+  "items": ["small_hp_potion", "small_mp_potion", "herb"],
+  "shops": ["merchant_shop"],
+  "spawn": {
+    "x": 768,
+    "y": 840
+  },
+  "exits": [
+    {
+      "id": "shop_exit",
+      "to": "city",
+      "area": { "x": 688, "y": 900, "width": 160, "height": 120 },
+      "spawn": { "x": 520, "y": 435, "direction": "down" }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "ancient_root",
+  "name": "Ancient Root",
+  "spriteBase": "assets/mobs/fungus_monster",
+  "spriteSheetName": "fungus_monster",
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4,
+  "width": 72,
+  "height": 72,
+  "maxHp": 18,
+  "hp": 18,
+  "damage": 3,
+  "speed": 0.45,
+  "roamRadius": 130,
+  "aggroRadius": 200,
+  "attackRange": 50,
+  "attackCooldownMs": 1200,
+  "goldReward": 25,
+  "respawnTimeMs": 20000,
+  "difficulty": "elite"
+}

@@ -5,7 +5,7 @@
   "collisionMap": "src/maps/cityCollisionMap.js",
   "characters": ["guard", "spice_merchant", "baker"],
   "quests": ["northStreet", "lostSpiceCrate", "wildHoneyDelivery"],
-  "objects": ["city_south_gate_sign"],
+  "objects": ["city_south_gate_sign", "merchant_shop_house"],
   "items": ["spice_crate_seal", "wild_honeycomb", "meadow_herbs"],
   "spawn": {
     "strategy": "closestRoadToCenter"

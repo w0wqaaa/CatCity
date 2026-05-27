@@ -5,7 +5,15 @@
   "frameCount": 10,
   "width": 64,
   "height": 64,
+  "maxHp": 7,
+  "hp": 7,
+  "damage": 1,
   "speed": 0.7,
   "roamRadius": 130,
-  "aggroRadius": 180
+  "aggroRadius": 180,
+  "attackRange": 44,
+  "attackCooldownMs": 1000,
+  "goldReward": 6,
+  "respawnTimeMs": 9000,
+  "difficulty": "normal"
 }

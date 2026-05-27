@@ -1,0 +1,9 @@
+{
+  "id": "herb",
+  "name": "Herb",
+  "description": "A simple garden herb used for early recipes.",
+  "type": "material",
+  "effect": null,
+  "value": 0,
+  "icon": "herb"
+}

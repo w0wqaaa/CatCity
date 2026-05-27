@@ -1,10 +1,11 @@
-import { loadImage, loadMobFrames, loadPlayerFrames } from "./assetLoader.js?v=login-fix-1";
-import { loadGameContent } from "./dataLoader.js?v=login-fix-1";
+import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=player-choice-1";
+import { loadGameContent, loadJson } from "./dataLoader.js?v=gameplay-economy-1";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
-import { NPCGuard } from "../entities/NPCGuard.js?v=login-fix-1";
-import { Mob } from "../entities/Mob.js?v=attack-fix-1";
+import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
+import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
+import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
 import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=menu-hotkeys-1";
-import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=menu-hotkeys-1";
+import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=run-controls-1";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -12,11 +13,25 @@ const PLAYER_DEFAULT_STATS = {
   maxHp: 10,
   mp: 5,
   maxMp: 5,
+  gold: 0,
 };
 const PLAYER_ATTACK_DAMAGE = 1;
 const PLAYER_ATTACK_RANGE = 48;
 const PLAYER_ATTACK_WIDTH = 48;
 const PLAYER_ATTACK_COOLDOWN = 350;
+const PLAYER_RUN_MULTIPLIER = 1.7;
+const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const RUN_KEYS = new Set(["ShiftLeft", "ShiftRight"]);
+const KEY_ALIASES = {
+  up: ["KeyW", "ArrowUp", "w", "ц"],
+  down: ["KeyS", "ArrowDown", "s", "ы"],
+  left: ["KeyA", "ArrowLeft", "a", "ф"],
+  right: ["KeyD", "ArrowRight", "d", "в"],
+  interact: ["KeyE", "e", "у"],
+  quests: ["KeyQ", "q", "й"],
+  inventory: ["KeyI", "i", "ш"],
+  minimap: ["KeyM", "m", "ь"],
+};
 
 if (window.location.search) {
   window.history.replaceState({}, "", window.location.pathname);
@@ -35,13 +50,17 @@ let cat;
 let npcs = [];
 let mobs = [];
 let objects = [];
+let mobRespawns = [];
 let activeNpc = null;
 let activeInteractable = null;
 let keys = {};
+let pressedDirections = [];
 let questLog = [];
 let questStates = {};
 let inventory = {};
 let playerStats = { ...PLAYER_DEFAULT_STATS };
+let playerCharacter = "boy";
+let loadedPlayerCharacter = null;
 let inDialog = false;
 let dialogIndex = 0;
 let dialogLines = [];
@@ -51,16 +70,23 @@ let highlightPulse = 0;
 let showHint = false;
 let hintPulse = 0;
 let isTransitioning = false;
+let isRespawning = false;
 let currentUser = null;
 let currentLocationId = "city";
 let loopStarted = false;
 let lastAutosaveAt = 0;
 let lastAttackAt = 0;
+let lastPlayerHitNoticeAt = 0;
 let playerFramesPromise = null;
+let shopPanel = null;
+let shopItemsList = null;
+let activeShop = null;
+const itemCache = new Map();
 
 const loginScreen = document.getElementById("loginScreen");
 const loginForm = document.getElementById("loginForm");
 const usernameInput = document.getElementById("usernameInput");
+const characterInputs = document.querySelectorAll("input[name='playerCharacter']");
 const loginMessage = document.getElementById("loginMessage");
 const ui = document.getElementById("ui");
 const playerBadge = document.getElementById("playerBadge");
@@ -86,11 +112,13 @@ document.body.appendChild(notification);
 async function startGame() {
   initMinimap();
   initControlLegend();
+  initShopUi();
   setupEventListeners();
   initLogin();
   playerFramesPromise = loadPlayerFrames();
   try {
     playerFrames = await playerFramesPromise;
+    loadedPlayerCharacter = "boy";
   } catch (error) {
     console.error(error);
     loginMessage.textContent = "Не удалось загрузить ассеты игрока. Проверьте файлы игры.";
@@ -98,10 +126,15 @@ async function startGame() {
 }
 
 function setupEventListeners() {
-  window.addEventListener("keydown", handleKey);
+  window.addEventListener("keydown", handleKey, true);
   window.addEventListener("keyup", (e) => {
-    keys[e.key] = false;
-    keys[e.code] = false;
+    setKeyState(e, false);
+  }, true);
+  window.addEventListener("blur", clearInputState);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      clearInputState();
+    }
   });
   window.addEventListener("beforeunload", saveProgress);
   nextDialog.addEventListener("click", nextDialogLine);
@@ -149,16 +182,52 @@ function initLogin() {
     usernameInput.value = lastUser;
     loginMessage.textContent = `Последний игрок: ${lastUser}. Нажмите "Войти в игру", чтобы продолжить.`;
   }
+  setSelectedPlayerCharacter(getLastSelectedPlayerCharacter(lastUser));
   usernameInput.focus();
+}
+
+function getSelectedPlayerCharacter() {
+  const selected = [...characterInputs].find((input) => input.checked)?.value;
+  return selected === "girl" ? "girl" : "boy";
+}
+
+function setSelectedPlayerCharacter(character) {
+  const value = character === "girl" ? "girl" : "boy";
+  characterInputs.forEach((input) => {
+    input.checked = input.value === value;
+  });
+}
+
+function getLastSelectedPlayerCharacter(lastUser) {
+  const savedCharacter = lastUser
+    ? readSavedProgressForUser(lastUser)?.playerCharacter
+    : null;
+  return savedCharacter || localStorage.getItem("catCity.lastCharacter") || "boy";
+}
+
+function readSavedProgressForUser(username) {
+  try {
+    const raw = localStorage.getItem(getSaveKey(username));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function login(username) {
   currentUser = username;
+  playerCharacter = getSelectedPlayerCharacter();
   localStorage.setItem("catCity.lastUser", username);
+  localStorage.setItem("catCity.lastCharacter", playerCharacter);
   loadProgress();
 
-  if (!playerFrames) {
-    playerFrames = await playerFramesPromise;
+  if (loadedPlayerCharacter !== playerCharacter) {
+    if (playerCharacter === "boy" && playerFramesPromise) {
+      playerFrames = await playerFramesPromise;
+    } else {
+      playerFrames = await loadPlayerFrames(playerCharacter);
+    }
+    loadedPlayerCharacter = playerCharacter;
   }
 
   loginScreen.classList.add("hidden");
@@ -182,6 +251,7 @@ function logout() {
   currentUser = null;
   questsPanel.classList.remove("visible");
   inventoryPanel.classList.remove("visible");
+  closeShop();
   dialogBox.classList.add("hidden");
   ui.classList.add("hidden");
   loginScreen.classList.remove("hidden");
@@ -217,8 +287,9 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   if (spawnOverride?.direction) {
     cat.direction = spawnOverride.direction;
   }
-  npcs = createNpcs();
+  npcs = await createNpcs();
   mobs = await createMobs();
+  mobRespawns = [];
   objects = createObjects();
   showNotification(content.location.name);
   if (!options.skipSave) {
@@ -266,6 +337,7 @@ function readSavedProgress() {
 
 function loadProgress() {
   const save = readSavedProgress();
+  playerCharacter = getSelectedPlayerCharacter() || save?.playerCharacter || "boy";
   currentLocationId = save?.locationId || "city";
   questStates = save?.questStates || {};
   questLog = save?.questLog || [];
@@ -282,6 +354,7 @@ function saveProgress() {
     version: SAVE_VERSION,
     username: currentUser,
     locationId: content?.location?.id || currentLocationId,
+    playerCharacter,
     player: {
       x: Math.round(cat.x),
       y: Math.round(cat.y),
@@ -306,6 +379,11 @@ function autosaveProgress() {
 }
 
 function handleKey(e) {
+  setKeyState(e, true);
+  if (isMovementKey(e) || isRunKey(e)) {
+    e.preventDefault();
+  }
+
   if (!currentUser || !cat) {
     return;
   }
@@ -327,19 +405,19 @@ function handleKey(e) {
     return;
   }
 
-  if (e.code === "KeyQ") {
+  if (matchesKey(e, KEY_ALIASES.quests)) {
     e.preventDefault();
     toggleQuestPanel();
     return;
   }
 
-  if (e.code === "KeyI") {
+  if (matchesKey(e, KEY_ALIASES.inventory)) {
     e.preventDefault();
     toggleInventoryPanel();
     return;
   }
 
-  if (e.code === "KeyM") {
+  if (matchesKey(e, KEY_ALIASES.minimap)) {
     e.preventDefault();
     toggleMinimap();
     return;
@@ -353,14 +431,78 @@ function handleKey(e) {
     return;
   }
 
-  keys[e.key] = true;
-  keys[e.code] = true;
-  const isE = e.code === "KeyE" || e.key === "e" || e.key === "E";
-  if (isE) {
+  if (matchesKey(e, KEY_ALIASES.interact)) {
+    e.preventDefault();
     if (!tryTalk()) {
       tryLocationExit();
     }
   }
+}
+
+function setKeyState(e, isPressed) {
+  if (e.key) {
+    keys[e.key] = isPressed;
+    keys[e.key.toLowerCase()] = isPressed;
+  }
+  if (e.code) {
+    keys[e.code] = isPressed;
+  }
+
+  const direction = getMovementDirectionFromEvent(e);
+  if (!direction) {
+    return;
+  }
+
+  if (isPressed) {
+    pressedDirections = pressedDirections.filter((item) => item !== direction);
+    pressedDirections.push(direction);
+  } else {
+    pressedDirections = pressedDirections.filter((item) => item !== direction);
+  }
+}
+
+function isMovementKey(e) {
+  return (
+    MOVEMENT_KEYS.has(e.code) ||
+    matchesKey(e, KEY_ALIASES.up) ||
+    matchesKey(e, KEY_ALIASES.down) ||
+    matchesKey(e, KEY_ALIASES.left) ||
+    matchesKey(e, KEY_ALIASES.right)
+  );
+}
+
+function isRunKey(e) {
+  return RUN_KEYS.has(e.code) || e.key === "Shift";
+}
+
+function matchesKey(e, aliases) {
+  const key = e.key?.toLowerCase();
+  return aliases.includes(e.code) || aliases.includes(key);
+}
+
+function isKeyDown(aliases) {
+  return aliases.some((alias) => keys[alias]);
+}
+
+function getMovementDirectionFromEvent(e) {
+  if (matchesKey(e, KEY_ALIASES.up)) {
+    return "up";
+  }
+  if (matchesKey(e, KEY_ALIASES.down)) {
+    return "down";
+  }
+  if (matchesKey(e, KEY_ALIASES.left)) {
+    return "left";
+  }
+  if (matchesKey(e, KEY_ALIASES.right)) {
+    return "right";
+  }
+  return null;
+}
+
+function clearInputState() {
+  keys = {};
+  pressedDirections = [];
 }
 
 function toggleQuestPanel() {
@@ -376,9 +518,12 @@ function toggleInventoryPanel() {
 }
 
 function closeMenus() {
-  const hadOpenMenu = questsPanel.classList.contains("visible") || inventoryPanel.classList.contains("visible");
+  const hadOpenMenu = questsPanel.classList.contains("visible") ||
+    inventoryPanel.classList.contains("visible") ||
+    Boolean(shopPanel?.classList.contains("visible"));
   questsPanel.classList.remove("visible");
   inventoryPanel.classList.remove("visible");
+  closeShop();
   return hadOpenMenu;
 }
 
@@ -389,6 +534,7 @@ function normalizePlayerStats(stats = {}) {
     maxHp: Number.isFinite(savedStats.maxHp) ? savedStats.maxHp : PLAYER_DEFAULT_STATS.maxHp,
     mp: Number.isFinite(savedStats.mp) ? savedStats.mp : PLAYER_DEFAULT_STATS.mp,
     maxMp: Number.isFinite(savedStats.maxMp) ? savedStats.maxMp : PLAYER_DEFAULT_STATS.maxMp,
+    gold: Number.isFinite(savedStats.gold) ? savedStats.gold : PLAYER_DEFAULT_STATS.gold,
   };
 }
 
@@ -396,7 +542,47 @@ function updatePlayerStatsUi() {
   if (!playerStatsBadge) {
     return;
   }
-  playerStatsBadge.textContent = `HP ${playerStats.hp}/${playerStats.maxHp} MP ${playerStats.mp}/${playerStats.maxMp}`;
+  playerStatsBadge.textContent = `HP ${playerStats.hp}/${playerStats.maxHp} MP ${playerStats.mp}/${playerStats.maxMp} Gold ${playerStats.gold}`;
+}
+
+function damagePlayer(amount) {
+  if (isRespawning) {
+    return;
+  }
+
+  playerStats.hp = Math.max(0, playerStats.hp - amount);
+  updatePlayerStatsUi();
+  saveProgress();
+
+  if (playerStats.hp <= 0) {
+    handlePlayerDeath();
+  }
+
+  const now = Date.now();
+  if (now - lastPlayerHitNoticeAt > 900) {
+    lastPlayerHitNoticeAt = now;
+    showNotification(playerStats.hp > 0 ? `Урон: -${amount} HP` : "HP закончились");
+  }
+}
+
+async function handlePlayerDeath() {
+  if (isRespawning) {
+    return;
+  }
+
+  isRespawning = true;
+  clearInputState();
+  playerStats.hp = playerStats.maxHp;
+  playerStats.mp = playerStats.maxMp;
+  updatePlayerStatsUi();
+  showNotification("You fainted. Respawning in Cat City.");
+
+  try {
+    await switchLocation("city", null, { skipSave: true });
+    saveProgress();
+  } finally {
+    isRespawning = false;
+  }
 }
 
 function attackMobs() {
@@ -413,11 +599,44 @@ function attackMobs() {
 
   const defeated = target.takeDamage(PLAYER_ATTACK_DAMAGE);
   if (defeated) {
-    mobs = mobs.filter((mob) => mob !== target);
-    showNotification("Моб побеждён");
+    defeatMob(target);
+    return;
   } else {
     showNotification(`Попадание: ${target.hp}/${target.maxHp}`);
   }
+}
+
+function defeatMob(mob) {
+  mobs = mobs.filter((item) => item !== mob);
+  const reward = Number(mob.data.goldReward) || 0;
+  if (reward > 0) {
+    playerStats.gold += reward;
+    updatePlayerStatsUi();
+    showNotification(`Mob defeated: +${reward} Gold`);
+  } else {
+    showNotification("Mob defeated");
+  }
+
+  queueMobRespawn(mob);
+  saveProgress();
+}
+
+function queueMobRespawn(mob) {
+  const respawnTimeMs = Number(mob.data.respawnTimeMs) || 0;
+  if (respawnTimeMs <= 0) {
+    return;
+  }
+
+  mobRespawns.push({
+    locationId: currentLocationId,
+    availableAt: Date.now() + respawnTimeMs,
+    data: {
+      ...mob.data,
+      position: { ...mob.data.position },
+      hp: mob.maxHp,
+    },
+    pending: false,
+  });
 }
 
 function isMobInAttackRange(mob) {
@@ -478,7 +697,16 @@ function tryTalk() {
   }
 
   if (interactable.type === "npc") {
+    if (interactable.entity.data.shop) {
+      openShop(interactable.entity.data.shop);
+      return true;
+    }
     startDialog(interactable.entity);
+    return true;
+  }
+
+  if (interactable.entity.actionType === "enterLocation" && interactable.entity.to) {
+    switchLocation(interactable.entity.to, interactable.entity.spawn);
     return true;
   }
 
@@ -659,6 +887,100 @@ function addItem(itemId, quantity = 1) {
   updateInventoryList();
   showNotification(`Получено: ${item.name}`);
   saveProgress();
+}
+
+function initShopUi() {
+  shopPanel = document.getElementById("shopPanel");
+  if (shopPanel) {
+    shopItemsList = document.getElementById("shopItemsList");
+    return;
+  }
+
+  shopPanel = document.createElement("div");
+  shopPanel.id = "shopPanel";
+  shopPanel.className = "hidden";
+  shopPanel.innerHTML = `
+    <h3 id="shopTitle">Shop</h3>
+    <div id="shopItemsList"></div>
+    <button id="closeShop">Close</button>
+  `;
+  document.body.appendChild(shopPanel);
+  shopItemsList = document.getElementById("shopItemsList");
+  document.getElementById("closeShop").addEventListener("click", closeShop);
+}
+
+async function openShop(shopId) {
+  if (!shopPanel || !shopItemsList) {
+    initShopUi();
+  }
+
+  closeMenus();
+  try {
+    activeShop = await loadJson(`data/shops/${shopId}.json`);
+    shopPanel.classList.remove("hidden");
+    shopPanel.classList.add("visible");
+    await renderShop();
+  } catch (error) {
+    console.error(error);
+    showNotification("Shop is unavailable");
+  }
+}
+
+function closeShop() {
+  if (!shopPanel) {
+    return;
+  }
+  shopPanel.classList.add("hidden");
+  shopPanel.classList.remove("visible");
+  activeShop = null;
+}
+
+async function getItemData(itemId) {
+  if (content.items?.[itemId]) {
+    return content.items[itemId];
+  }
+  if (!itemCache.has(itemId)) {
+    itemCache.set(itemId, loadJson(`data/items/${itemId}.json`).catch(() => ({
+      id: itemId,
+      name: itemId,
+    })));
+  }
+  return itemCache.get(itemId);
+}
+
+async function renderShop() {
+  shopItemsList.innerHTML = "";
+  const items = activeShop?.items || [];
+  for (const entry of items) {
+    const item = await getItemData(entry.itemId);
+    const row = document.createElement("div");
+    row.className = "shop-row";
+
+    const label = document.createElement("span");
+    label.textContent = `${item.name} - ${entry.price} Gold`;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Buy";
+    button.addEventListener("click", () => buyShopItem(entry.itemId, entry.price));
+
+    row.append(label, button);
+    shopItemsList.appendChild(row);
+  }
+}
+
+async function buyShopItem(itemId, price) {
+  if (playerStats.gold < price) {
+    showNotification("Not enough Gold");
+    return;
+  }
+
+  const item = await getItemData(itemId);
+  playerStats.gold -= price;
+  updatePlayerStatsUi();
+  addItem(item.id, 1);
+  saveProgress();
+  await renderShop();
 }
 
 function consumeItems(items) {
@@ -848,23 +1170,38 @@ function findLargestRoadCluster() {
   return clusters[0];
 }
 
-function createNpcs() {
+async function createNpcs() {
   const biggestRoad = findLargestRoadCluster();
-  return (content.location.characters || []).map((characterId) => {
+  return Promise.all((content.location.characters || []).map(async (characterId) => {
     const character = content.characters[characterId];
     const position = resolveNpcPosition(character, biggestRoad);
-    const npc = new NPCGuard(
-      position.x,
-      position.y,
-      character.sprite,
-      TILE_SIZE,
-      collisionMap,
-      biggestRoad
-    );
+    let frames = null;
+    try {
+      frames = await loadNpcFrames(character);
+    } catch {
+      frames = null;
+    }
+    const npc = character.type === "guard"
+      ? new NPCGuard(
+        position.x,
+        position.y,
+        character.sprite,
+        TILE_SIZE,
+        collisionMap,
+        biggestRoad,
+        frames
+      )
+      : new NPC(
+        position.x,
+        position.y,
+        character.sprite,
+        TILE_SIZE,
+        frames
+      );
     npc.data = character;
-    npc.isStatic = character.movement === "static";
+    npc.isStatic = character.type !== "guard" || character.movement === "static";
     return npc;
-  });
+  }));
 }
 
 function createObjects() {
@@ -879,12 +1216,46 @@ async function createMobs() {
     if (!mobsByType.has(mobData.type)) {
       mobsByType.set(
         mobData.type,
-        loadMobFrames(mobData.spriteBase, mobData.frameCount || 10)
+        loadMobFrames(mobData, mobData.frameCount || 10)
       );
     }
     const frames = await mobsByType.get(mobData.type);
     return new Mob(mobData, frames, TILE_SIZE, collisionMap);
   }));
+}
+
+async function spawnMob(mobData) {
+  const frames = await loadMobFrames(mobData, mobData.frameCount || 10);
+  return new Mob(mobData, frames, TILE_SIZE, collisionMap);
+}
+
+function processMobRespawns() {
+  if (!mobRespawns.length || isTransitioning || !cat) {
+    return;
+  }
+
+  const now = Date.now();
+  mobRespawns.forEach((entry) => {
+    if (entry.pending || entry.locationId !== currentLocationId || now < entry.availableAt) {
+      return;
+    }
+
+    const spawn = entry.data.position;
+    if (Math.hypot(cat.x - spawn.x, cat.y - spawn.y) < 96) {
+      entry.availableAt = now + 1500;
+      return;
+    }
+
+    entry.pending = true;
+    spawnMob(entry.data).then((mob) => {
+      mobs.push(mob);
+      mobRespawns = mobRespawns.filter((item) => item !== entry);
+    }).catch((error) => {
+      console.error(error);
+      entry.pending = false;
+      entry.availableAt = Date.now() + 2000;
+    });
+  });
 }
 
 function resolveNpcPosition(character, roadCluster) {
@@ -945,23 +1316,14 @@ function update() {
 
   const prevX = cat.x;
   const prevY = cat.y;
+  const moveSpeed = getPlayerMoveSpeed();
+  const moveVector = getCurrentMoveVector();
   cat.moving = false;
 
-  if (keys.ArrowUp || keys.KeyW) {
-    cat.y -= cat.speed;
-    cat.direction = "up";
-    cat.moving = true;
-  } else if (keys.ArrowDown || keys.KeyS) {
-    cat.y += cat.speed;
-    cat.direction = "down";
-    cat.moving = true;
-  } else if (keys.ArrowLeft || keys.KeyA) {
-    cat.x -= cat.speed;
-    cat.direction = "left";
-    cat.moving = true;
-  } else if (keys.ArrowRight || keys.KeyD) {
-    cat.x += cat.speed;
-    cat.direction = "right";
+  if (moveVector.x || moveVector.y) {
+    cat.x += moveVector.x * moveSpeed;
+    cat.y += moveVector.y * moveSpeed;
+    cat.direction = moveVector.direction;
     cat.moving = true;
   }
 
@@ -972,7 +1334,7 @@ function update() {
 
   if (cat.moving) {
     cat.tick++;
-    if (cat.tick % 10 === 0) {
+    if (cat.tick % (isPlayerRunning() ? 6 : 10) === 0) {
       cat.frame = (cat.frame + 1) % 3;
     }
     autosaveProgress();
@@ -985,7 +1347,16 @@ function update() {
       npc.update();
     }
   });
-  mobs.forEach((mob) => mob.update(cat));
+  mobs.forEach((mob) => {
+    if (isRespawning) {
+      return;
+    }
+    const event = mob.update(cat);
+    if (event?.type === "attack") {
+      damagePlayer(event.damage);
+    }
+  });
+  processMobRespawns();
 
   showHint = Boolean(findNearestInteractable()) && !inDialog;
 
@@ -1019,6 +1390,7 @@ function draw() {
 
   drawExitMarkers();
   drawQuestTurnInMarkers();
+  drawNpcNameLabels();
 
   if (showHint) {
     drawInteractionHint();
@@ -1035,6 +1407,47 @@ function draw() {
   updateControlLegend(getControlLegendContext());
 }
 
+function isPlayerRunning() {
+  return Boolean(keys.ShiftLeft || keys.ShiftRight || keys.Shift);
+}
+
+function getPlayerMoveSpeed() {
+  return cat.speed * (isPlayerRunning() ? PLAYER_RUN_MULTIPLIER : 1);
+}
+
+function getCurrentMoveVector() {
+  const x = (isKeyDown(KEY_ALIASES.right) ? 1 : 0) - (isKeyDown(KEY_ALIASES.left) ? 1 : 0);
+  const y = (isKeyDown(KEY_ALIASES.down) ? 1 : 0) - (isKeyDown(KEY_ALIASES.up) ? 1 : 0);
+
+  if (!x && !y) {
+    pressedDirections = [];
+    return { x: 0, y: 0, direction: cat.direction };
+  }
+
+  const length = Math.hypot(x, y) || 1;
+  const direction = getFacingDirectionFromPressedKeys(x, y);
+  return {
+    x: x / length,
+    y: y / length,
+    direction,
+  };
+}
+
+function getFacingDirectionFromPressedKeys(x, y) {
+  while (pressedDirections.length) {
+    const direction = pressedDirections[pressedDirections.length - 1];
+    if (isKeyDown(KEY_ALIASES[direction])) {
+      return direction;
+    }
+    pressedDirections.pop();
+  }
+
+  if (Math.abs(x) >= Math.abs(y)) {
+    return x > 0 ? "right" : "left";
+  }
+  return y > 0 ? "down" : "up";
+}
+
 function getControlLegendContext() {
   const interactable = !inDialog ? findNearestInteractable() : null;
   return {
@@ -1045,7 +1458,9 @@ function getControlLegendContext() {
     nearbyExit: !inDialog && Boolean(findNearbyExit()),
     nearbyMob: !inDialog && mobs.some(isMobInAttackRange),
     minimapEnabled: isMinimapEnabled(),
-    isMenuOpen: questsPanel.classList.contains("visible") || inventoryPanel.classList.contains("visible"),
+    isMenuOpen: questsPanel.classList.contains("visible") ||
+      inventoryPanel.classList.contains("visible") ||
+      Boolean(shopPanel?.classList.contains("visible")),
     playerCanAttack: !inDialog,
   };
 }
@@ -1150,7 +1565,7 @@ function drawQuestTurnInMarkers() {
 
   const pulse = 0.55 + Math.sin(highlightPulse * 4) * 0.35;
   readyNpcs.forEach((npc) => {
-    const markerY = npc.y - npc.height / 2 - 18;
+    const markerY = npc.y - npc.height / 2 - 30;
 
     ctx.save();
     ctx.strokeStyle = `rgba(255, 232, 90, ${0.65 + pulse * 0.25})`;
@@ -1170,6 +1585,36 @@ function drawQuestTurnInMarkers() {
     ctx.fillText("!", npc.x, markerY);
     ctx.restore();
   });
+}
+
+function drawNpcNameLabels() {
+  npcs.forEach((npc) => {
+    const label = getNpcLabel(npc);
+    const x = npc.x;
+    const y = npc.y - npc.height / 2 - 8;
+
+    ctx.save();
+    ctx.font = "bold 13px monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(245, 240, 216, 0.96)";
+    ctx.strokeStyle = "rgba(22, 24, 24, 0.9)";
+    ctx.lineWidth = 4;
+    ctx.strokeText(label, x, y);
+    ctx.fillText(label, x, y);
+    ctx.restore();
+  });
+}
+
+function getNpcLabel(npc) {
+  const labels = {
+    baker: "Пекарь",
+    beekeeper: "Пасечник",
+    guard: "Страж",
+    herbalist: "Травница",
+    road_scout: "Следопыт",
+    spice_merchant: "Торговец",
+  };
+  return labels[npc.data.id] || npc.data.name || "NPC";
 }
 
 function canTurnInQuestToNpc(npc) {

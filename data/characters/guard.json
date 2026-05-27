@@ -5,5 +5,12 @@
   "sprite": "assets/characters/guard/cat_guard.png",
   "positionStrategy": "largestRoadCenter",
   "dialog": "guard_intro",
-  "quests": ["northStreet"]
+  "quests": [
+    "northStreet"
+  ],
+  "spriteSheetBase": "assets/npcs/guard",
+  "spriteSheetName": "guard",
+  "idleFrameCount": 3,
+  "walkFrameCount": 3,
+  "attackFrameCount": 3
 }

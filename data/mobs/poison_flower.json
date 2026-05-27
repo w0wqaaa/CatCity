@@ -1,0 +1,22 @@
+{
+  "id": "poison_flower",
+  "name": "Poison Flower",
+  "spriteBase": "assets/mobs/carnivorous_plant",
+  "spriteSheetName": "carnivorous_plant",
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4,
+  "width": 68,
+  "height": 68,
+  "maxHp": 10,
+  "hp": 10,
+  "damage": 2,
+  "speed": 0.58,
+  "roamRadius": 125,
+  "aggroRadius": 185,
+  "attackRange": 46,
+  "attackCooldownMs": 1000,
+  "goldReward": 10,
+  "respawnTimeMs": 12000,
+  "difficulty": "hard"
+}

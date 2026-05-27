@@ -7,27 +7,27 @@
   "mobs": [
     {
       "id": "garden_plant_west",
-      "type": "carnivorous_plant",
+      "type": "weak_plant",
       "position": { "x": 420, "y": 330 }
     },
     {
       "id": "garden_fungus_east",
-      "type": "fungus_monster",
+      "type": "thorn_bush",
       "position": { "x": 1040, "y": 335 }
     },
     {
       "id": "garden_plant_center",
-      "type": "carnivorous_plant",
+      "type": "poison_flower",
       "position": { "x": 760, "y": 555 }
     },
     {
       "id": "garden_fungus_south_west",
-      "type": "fungus_monster",
+      "type": "weak_plant",
       "position": { "x": 405, "y": 742 }
     },
     {
       "id": "garden_plant_south_east",
-      "type": "carnivorous_plant",
+      "type": "ancient_root",
       "position": { "x": 1125, "y": 760 }
     }
   ],
