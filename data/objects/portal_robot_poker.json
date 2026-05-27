@@ -1,0 +1,23 @@
+{
+  "id": "portal_robot_poker",
+  "name": "Портал к Роботу-крупье",
+  "type": "portal",
+  "position": {
+    "x": 768,
+    "y": 224
+  },
+  "marker": {
+    "x": 768,
+    "y": 160
+  },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "robot_poker",
+  "locked": true,
+  "description": "Здесь позже будет мини-игра в покер с роботом."
+}

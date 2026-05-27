@@ -1,0 +1,23 @@
+{
+  "id": "portal_puzzle_world",
+  "name": "Мир головоломок",
+  "type": "portal",
+  "position": {
+    "x": 424,
+    "y": 712
+  },
+  "marker": {
+    "x": 424,
+    "y": 648
+  },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "puzzle_world",
+  "locked": true,
+  "description": "Здесь позже будет мир головоломок."
+}

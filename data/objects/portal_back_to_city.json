@@ -1,0 +1,28 @@
+{
+  "id": "portal_back_to_city",
+  "name": "Портал в город",
+  "type": "portal",
+  "position": {
+    "x": 768,
+    "y": 900
+  },
+  "marker": {
+    "x": 768,
+    "y": 836
+  },
+  "sprite": "assets/objects/portals/portal_green_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "city",
+  "locked": false,
+  "spawn": {
+    "x": 720,
+    "y": 690,
+    "direction": "down"
+  },
+  "description": "Портал возвращает к городскому кругу."
+}

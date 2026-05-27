@@ -1,0 +1,23 @@
+{
+  "id": "portal_future_dimension",
+  "name": "Будущее измерение",
+  "type": "portal",
+  "position": {
+    "x": 768,
+    "y": 760
+  },
+  "marker": {
+    "x": 768,
+    "y": 696
+  },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "future_dimension",
+  "locked": true,
+  "description": "Резерв под будущий игровой режим."
+}

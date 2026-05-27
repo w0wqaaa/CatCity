@@ -1,0 +1,28 @@
+{
+  "id": "city_portal_to_lost_valley",
+  "name": "Портал в Долину затерянных порталов",
+  "type": "portal",
+  "position": {
+    "x": 720,
+    "y": 650
+  },
+  "marker": {
+    "x": 720,
+    "y": 590
+  },
+  "sprite": "assets/objects/portals/portal_blue_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "lost_portal_valley",
+  "locked": false,
+  "spawn": {
+    "x": 768,
+    "y": 850,
+    "direction": "up"
+  },
+  "description": "Портал ведет в старую долину за городом."
+}

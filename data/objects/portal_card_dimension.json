@@ -1,0 +1,23 @@
+{
+  "id": "portal_card_dimension",
+  "name": "Карточное измерение",
+  "type": "portal",
+  "position": {
+    "x": 424,
+    "y": 288
+  },
+  "marker": {
+    "x": 424,
+    "y": 224
+  },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "card_game",
+  "locked": true,
+  "description": "Здесь позже будет карточная мини-игра."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "portal_dark_forest",
+  "name": "Темный лес",
+  "type": "portal",
+  "position": {
+    "x": 1112,
+    "y": 712
+  },
+  "marker": {
+    "x": 1112,
+    "y": 648
+  },
+  "sprite": "assets/objects/portals/portal_red_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "dark_forest",
+  "locked": true,
+  "description": "Здесь позже появится другое измерение."
+}

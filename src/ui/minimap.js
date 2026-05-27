@@ -46,6 +46,7 @@ export function updateMinimap(state = null) {
     player,
     npcs = [],
     mobs = [],
+    objects = [],
     exits = [],
   } = state;
 
@@ -62,6 +63,12 @@ export function updateMinimap(state = null) {
   drawMapBounds(offsetX, offsetY, mapWidth, mapHeight, scale);
   drawCollisionMap(collisionMap, tileSize, offsetX, offsetY, scale);
   exits.forEach((exit) => drawArea(exit.area, offsetX, offsetY, scale, "#54d66a"));
+  objects
+    .filter((object) => object.type === "portal")
+    .forEach((portal) => {
+      const color = portal.locked ? "#b86cff" : "#65f4d0";
+      drawPoint(portal.position.x, portal.position.y, offsetX, offsetY, scale, color, 3.2);
+    });
   mobs.forEach((mob) => drawPoint(mob.x, mob.y, offsetX, offsetY, scale, "#ff5858", 2.6));
   npcs.forEach((npc) => drawPoint(npc.x, npc.y, offsetX, offsetY, scale, "#ffd85a", 2.8));
   drawPoint(player.x, player.y, offsetX, offsetY, scale, "#79c6ff", 4);

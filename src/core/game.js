@@ -1,11 +1,23 @@
 import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=attack-anim-1";
 import { loadGameContent, loadJson } from "./dataLoader.js?v=sega16-v2";
+import { GameState } from "./GameState.js";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
 import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
 import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
-import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=menu-hotkeys-1";
-import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=run-controls-1";
+import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=portal-valley-1";
+import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=portal-valley-1";
+import { renderInventoryList, renderPlayerStats, renderQuestList } from "../ui/uiManager.js";
+import { attackFirstMob, canAttack, damagePlayer as applyPlayerDamage, getAttackBox as buildAttackBox, getMobBox, killMob, rectanglesOverlap, restorePlayerAfterDeath } from "../systems/combatSystem.js";
+import { getNpcDialogStage, openDialogState, advanceDialog } from "../systems/dialogSystem.js";
+import { addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats } from "../systems/inventorySystem.js";
+import { findNearestInteractable as findNearestInteraction, findNearbyExit as findNearbyLocationExit, isPointInArea } from "../systems/interactionSystem.js";
+import { getCurrentMoveVector as getMoveVector, getMoveSpeed, isKeyDown as isAliasDown, isRunning } from "../systems/movementSystem.js";
+import { canTurnInQuestToNpc as canTurnInQuestToNpcSystem, checkQuestConditions, completeQuest as completeQuestState, finishQuest as finishQuestState, startQuest as startQuestState, updateQuestStatus as updateQuestStatusState } from "../systems/questSystem.js";
+import { drawObjects as drawSpriteObjects, drawPlayer as drawPlayerSprite } from "../systems/renderSystem.js";
+import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from "../systems/respawnSystem.js";
+import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
+import { createShopPurchase } from "../systems/shopSystem.js";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -45,6 +57,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = CANVAS.width;
 canvas.height = CANVAS.height;
 
+const gameState = new GameState(PLAYER_DEFAULT_STATS);
 let playerFrames;
 let mapBackground;
 let content;
@@ -213,16 +226,12 @@ function getLastSelectedPlayerCharacter(lastUser) {
 }
 
 function readSavedProgressForUser(username) {
-  try {
-    const raw = localStorage.getItem(getSaveKey(username));
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  return readSavedProgressFromStorage(username);
 }
 
 async function login(username) {
   currentUser = username;
+  gameState.currentUser = username;
   playerCharacter = getSelectedPlayerCharacter();
   localStorage.setItem("catCity.lastUser", username);
   localStorage.setItem("catCity.lastCharacter", playerCharacter);
@@ -256,6 +265,7 @@ async function login(username) {
 function logout() {
   saveProgress();
   currentUser = null;
+  gameState.currentUser = null;
   questsPanel.classList.remove("visible");
   inventoryPanel.classList.remove("visible");
   closeShop();
@@ -309,6 +319,8 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   mobs = await createMobs();
   mobRespawns = [];
   objects = await createObjects();
+  gameState.setLocationRuntime({ locationId, content, collisionMap, player: cat, npcs, mobs, objects });
+  gameState.mobRespawns = mobRespawns;
   showNotification(content.location.name);
   if (!options.skipSave) {
     saveProgress();
@@ -330,7 +342,7 @@ function getSpawnPoint(centerTileX, centerTileY, spawnOverride) {
 }
 
 function getSaveKey(username = currentUser) {
-  return `catCity.save.${username.toLowerCase()}`;
+  return buildSaveKey(username);
 }
 
 function getSavedSpawn() {
@@ -341,16 +353,7 @@ function getSavedSpawn() {
 }
 
 function readSavedProgress() {
-  if (!currentUser) {
-    return null;
-  }
-
-  try {
-    const raw = localStorage.getItem(getSaveKey());
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  return readSavedProgressFromStorage(currentUser);
 }
 
 function loadProgress() {
@@ -361,6 +364,8 @@ function loadProgress() {
   questLog = save?.questLog || [];
   inventory = save?.inventory || {};
   playerStats = normalizePlayerStats(save?.playerStats);
+  gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats });
+  gameState.saveData = save;
 }
 
 function saveProgress() {
@@ -368,23 +373,22 @@ function saveProgress() {
     return;
   }
 
-  const save = {
+  const save = buildSaveData({
     version: SAVE_VERSION,
     username: currentUser,
     locationId: content?.location?.id || currentLocationId,
-    playerCharacter,
     player: {
+      ...cat,
       x: Math.round(cat.x),
       y: Math.round(cat.y),
-      direction: cat.direction,
     },
+    playerCharacter,
+    playerStats,
     questStates,
     questLog,
     inventory,
-    playerStats,
-    savedAt: new Date().toISOString(),
-  };
-  localStorage.setItem(getSaveKey(), JSON.stringify(save));
+  });
+  gameState.saveData = writeSave(currentUser, save);
 }
 
 function autosaveProgress() {
@@ -499,7 +503,7 @@ function matchesKey(e, aliases) {
 }
 
 function isKeyDown(aliases) {
-  return aliases.some((alias) => keys[alias]);
+  return isAliasDown(keys, aliases);
 }
 
 function getMovementDirectionFromEvent(e) {
@@ -546,21 +550,11 @@ function closeMenus() {
 }
 
 function normalizePlayerStats(stats = {}) {
-  const savedStats = stats || {};
-  return {
-    hp: Number.isFinite(savedStats.hp) ? savedStats.hp : PLAYER_DEFAULT_STATS.hp,
-    maxHp: Number.isFinite(savedStats.maxHp) ? savedStats.maxHp : PLAYER_DEFAULT_STATS.maxHp,
-    mp: Number.isFinite(savedStats.mp) ? savedStats.mp : PLAYER_DEFAULT_STATS.mp,
-    maxMp: Number.isFinite(savedStats.maxMp) ? savedStats.maxMp : PLAYER_DEFAULT_STATS.maxMp,
-    gold: Number.isFinite(savedStats.gold) ? savedStats.gold : PLAYER_DEFAULT_STATS.gold,
-  };
+  return normalizeStats(stats, PLAYER_DEFAULT_STATS);
 }
 
 function updatePlayerStatsUi() {
-  if (!playerStatsBadge) {
-    return;
-  }
-  playerStatsBadge.textContent = `HP ${playerStats.hp}/${playerStats.maxHp} MP ${playerStats.mp}/${playerStats.maxMp} Gold ${playerStats.gold}`;
+  renderPlayerStats(playerStatsBadge, playerStats);
 }
 
 function damagePlayer(amount) {
@@ -568,11 +562,11 @@ function damagePlayer(amount) {
     return;
   }
 
-  playerStats.hp = Math.max(0, playerStats.hp - amount);
+  const result = applyPlayerDamage(playerStats, amount);
   updatePlayerStatsUi();
   saveProgress();
 
-  if (playerStats.hp <= 0) {
+  if (result.died) {
     handlePlayerDeath();
   }
 
@@ -590,8 +584,7 @@ async function handlePlayerDeath() {
 
   isRespawning = true;
   clearInputState();
-  playerStats.hp = playerStats.maxHp;
-  playerStats.mp = playerStats.maxMp;
+  restorePlayerAfterDeath(playerStats);
   updatePlayerStatsUi();
   showNotification("You fainted. Respawning in Cat City.");
 
@@ -605,18 +598,25 @@ async function handlePlayerDeath() {
 
 function attackMobs() {
   const now = Date.now();
-  if (now - lastAttackAt < PLAYER_ATTACK_COOLDOWN) {
+  if (!canAttack(now, lastAttackAt, PLAYER_ATTACK_COOLDOWN)) {
     return;
   }
   lastAttackAt = now;
   startPlayerAttackAnimation();
 
-  const target = mobs.find(isMobInAttackRange);
+  const { target, defeated } = attackFirstMob({
+    player: cat,
+    mobs,
+    attackConfig: {
+      range: PLAYER_ATTACK_RANGE,
+      width: PLAYER_ATTACK_WIDTH,
+    },
+    damage: PLAYER_ATTACK_DAMAGE,
+  });
   if (!target) {
     return;
   }
 
-  const defeated = target.takeDamage(PLAYER_ATTACK_DAMAGE);
   if (defeated) {
     defeatMob(target);
     return;
@@ -632,10 +632,11 @@ function startPlayerAttackAnimation() {
 }
 
 function defeatMob(mob) {
-  mobs = mobs.filter((item) => item !== mob);
-  const reward = Number(mob.data.goldReward) || 0;
+  const result = killMob({ mobs, mob, playerStats });
+  mobs = result.mobs;
+  gameState.mobs = mobs;
+  const reward = result.rewardGold;
   if (reward > 0) {
-    playerStats.gold += reward;
     updatePlayerStatsUi();
     showNotification(`Mob defeated: +${reward} Gold`);
   } else {
@@ -647,21 +648,13 @@ function defeatMob(mob) {
 }
 
 function queueMobRespawn(mob) {
-  const respawnTimeMs = Number(mob.data.respawnTimeMs) || 0;
-  if (respawnTimeMs <= 0) {
+  const entry = createMobRespawnEntry(mob, currentLocationId);
+  if (!entry) {
     return;
   }
 
-  mobRespawns.push({
-    locationId: currentLocationId,
-    availableAt: Date.now() + respawnTimeMs,
-    data: {
-      ...mob.data,
-      position: { ...mob.data.position },
-      hp: mob.maxHp,
-    },
-    pending: false,
-  });
+  mobRespawns.push(entry);
+  gameState.mobRespawns = mobRespawns;
 }
 
 function isMobInAttackRange(mob) {
@@ -669,50 +662,10 @@ function isMobInAttackRange(mob) {
 }
 
 function getAttackBox() {
-  const direction = getDirectionVector(cat.direction);
-  const horizontal = direction.x !== 0;
-  const width = horizontal ? PLAYER_ATTACK_RANGE : PLAYER_ATTACK_WIDTH;
-  const height = horizontal ? PLAYER_ATTACK_WIDTH : PLAYER_ATTACK_RANGE;
-  const centerX = cat.x + direction.x * (PLAYER_ATTACK_RANGE / 2);
-  const centerY = cat.y + direction.y * (PLAYER_ATTACK_RANGE / 2);
-
-  return {
-    x: centerX - width / 2,
-    y: centerY - height / 2,
-    width,
-    height,
-  };
-}
-
-function getMobBox(mob) {
-  return {
-    x: mob.x - mob.width / 2,
-    y: mob.y - mob.height / 2,
-    width: mob.width,
-    height: mob.height,
-  };
-}
-
-function rectanglesOverlap(a, b) {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
-}
-
-function getDirectionVector(direction) {
-  if (direction === "up") {
-    return { x: 0, y: -1 };
-  }
-  if (direction === "left") {
-    return { x: -1, y: 0 };
-  }
-  if (direction === "right") {
-    return { x: 1, y: 0 };
-  }
-  return { x: 0, y: 1 };
+  return buildAttackBox(cat, {
+    range: PLAYER_ATTACK_RANGE,
+    width: PLAYER_ATTACK_WIDTH,
+  });
 }
 
 function tryTalk() {
@@ -730,6 +683,11 @@ function tryTalk() {
     return true;
   }
 
+  if (isPortalObject(interactable.entity)) {
+    handlePortalInteraction(interactable.entity);
+    return true;
+  }
+
   if (interactable.entity.actionType === "enterLocation" && interactable.entity.to) {
     switchLocation(interactable.entity.to, interactable.entity.spawn);
     return true;
@@ -737,6 +695,25 @@ function tryTalk() {
 
   startObjectDialog(interactable.entity);
   return true;
+}
+
+function isPortalObject(object) {
+  return object?.type === "portal" || object?.actionType === "portal";
+}
+
+function handlePortalInteraction(portal) {
+  if (portal.locked) {
+    showNotification("Портал пока нестабилен.");
+    return;
+  }
+
+  const targetLocationId = portal.targetLocationId || portal.to;
+  if (!targetLocationId) {
+    showNotification("Портал пока нестабилен.");
+    return;
+  }
+
+  switchLocation(targetLocationId, portal.spawn);
 }
 
 function tryLocationExit() {
@@ -750,17 +727,23 @@ function tryLocationExit() {
 }
 
 function startDialog(npc) {
-  const questId = npc.data.quests?.[0];
-  const stage = questId ? questStates[questId] || "none" : "none";
-  const dialog = content.dialogs[npc.data.dialog];
-  const stageDialog = dialog.stages[stage] || dialog.stages.none;
+  const stageDialog = getNpcDialogStage({
+    npc,
+    dialogs: content.dialogs,
+    questStates,
+  });
 
   inDialog = true;
   activeNpc = npc;
   npc.isFrozen = true;
   dialogBox.classList.remove("hidden");
-  dialogLines = stageDialog.lines;
-  dialogAction = stageDialog.after || null;
+  openDialogState(gameState.dialog, {
+    lines: stageDialog.lines,
+    action: stageDialog.after || null,
+    activeNpc: npc,
+  });
+  dialogLines = gameState.dialog.lines;
+  dialogAction = gameState.dialog.action;
   dialogIndex = 0;
   dialogText.textContent = dialogLines[dialogIndex];
 }
@@ -778,18 +761,24 @@ function startObjectDialog(object) {
   activeNpc = null;
   activeInteractable = object;
   dialogBox.classList.remove("hidden");
-  dialogLines = lines || [`${object.name}: Здесь пока ничего не происходит.`];
-  dialogAction = activeQuestIds.length
-    ? { collectObject: object.id, questIds: activeQuestIds }
-    : null;
+  openDialogState(gameState.dialog, {
+    lines: lines || [`${object.name}: Здесь пока ничего не происходит.`],
+    action: activeQuestIds.length
+      ? { collectObject: object.id, questIds: activeQuestIds }
+      : null,
+    activeInteractable: object,
+  });
+  dialogLines = gameState.dialog.lines;
+  dialogAction = gameState.dialog.action;
   dialogIndex = 0;
   dialogText.textContent = dialogLines[dialogIndex];
 }
 
 function nextDialogLine() {
-  dialogIndex++;
-  if (dialogIndex < dialogLines.length) {
-    dialogText.textContent = dialogLines[dialogIndex];
+  const result = advanceDialog(gameState.dialog);
+  dialogIndex = gameState.dialog.index;
+  if (!result.done) {
+    dialogText.textContent = result.line;
     return;
   }
 
@@ -798,9 +787,10 @@ function nextDialogLine() {
   if (activeNpc) {
     activeNpc.isFrozen = false;
   }
-  runDialogAction(dialogAction);
+  runDialogAction(result.action);
   activeNpc = null;
   activeInteractable = null;
+  dialogLines = [];
   dialogAction = null;
 }
 
@@ -826,76 +816,63 @@ function runDialogAction(action) {
 }
 
 function startQuest(questId) {
-  if (questStates[questId]) {
-    return;
-  }
-
-  const quest = content.quests[questId];
+  const quest = startQuestState({
+    questId,
+    quests: content.quests,
+    questStates,
+    questLog,
+  });
   if (!quest) {
     return;
   }
-  questStates[questId] = "active";
-  questLog.push({
-    id: quest.id,
-    name: quest.name,
-    status: quest.statusLabels.active,
-  });
   updateQuestList();
   showNotification(quest.notifications.started);
   saveProgress();
 }
 
 function completeQuest(questId) {
-  if (questStates[questId] !== "active") {
-    return;
-  }
-
-  const quest = content.quests[questId];
+  const quest = completeQuestState({
+    questId,
+    quests: content.quests,
+    questStates,
+    questLog,
+  });
   if (!quest) {
     return;
   }
-  questStates[questId] = "completed";
-  updateQuestStatus(questId, quest.statusLabels.completed);
+  updateQuestList();
   showNotification(quest.notifications.completed);
   saveProgress();
 }
 
 function finishQuest(questId) {
-  if (questStates[questId] !== "completed") {
-    return;
-  }
-
-  const quest = content.quests[questId];
+  const { quest, reason } = finishQuestState({
+    questId,
+    quests: content.quests,
+    questStates,
+    questLog,
+    inventory,
+  });
   if (!quest) {
     return;
   }
-  if (!hasRequiredItems(quest.turnIn?.requiresItems || [])) {
+  if (reason === "missingItems") {
     showNotification("Не хватает предметов для сдачи квеста.");
     return;
   }
 
-  consumeItems(quest.turnIn?.consumeItems || []);
-  questStates[questId] = "delivered";
-  updateQuestStatus(questId, quest.statusLabels.delivered);
+  updateInventoryList();
+  updateQuestList();
   showNotification(quest.notifications.delivered);
   saveProgress();
 }
-
 function updateQuestStatus(questId, status) {
-  const quest = questLog.find((item) => item.id === questId);
-  if (quest) {
-    quest.status = status;
-  }
+  updateQuestStatusState(questLog, questId, status);
   updateQuestList();
 }
 
 function updateQuestList() {
-  questsList.innerHTML = "";
-  questLog.forEach((quest) => {
-    const li = document.createElement("li");
-    li.textContent = `${quest.name} - ${quest.status}`;
-    questsList.appendChild(li);
-  });
+  renderQuestList(questsList, questLog);
 }
 
 function addItem(itemId, quantity = 1) {
@@ -903,12 +880,7 @@ function addItem(itemId, quantity = 1) {
     id: itemId,
     name: itemId,
   };
-  const current = inventory[itemId]?.quantity || 0;
-  inventory[itemId] = {
-    id: itemId,
-    name: item.name,
-    quantity: current + quantity,
-  };
+  addItemToInventory(inventory, item, quantity);
   updateInventoryList();
   showNotification(`Получено: ${item.name}`);
   saveProgress();
@@ -995,64 +967,41 @@ async function renderShop() {
 }
 
 async function buyShopItem(itemId, price) {
-  if (playerStats.gold < price) {
+  const item = await getItemData(itemId);
+  const purchase = createShopPurchase({
+    playerStats,
+    inventory,
+    item,
+    price,
+  });
+  if (!purchase.ok) {
     showNotification("Not enough Gold");
     return;
   }
 
-  const item = await getItemData(itemId);
-  playerStats.gold -= price;
   updatePlayerStatsUi();
-  addItem(item.id, 1);
+  updateInventoryList();
+  showNotification(`Получено: ${item.name}`);
   saveProgress();
   await renderShop();
 }
 
 function consumeItems(items) {
-  items.forEach((entry) => {
-    const itemId = typeof entry === "string" ? entry : entry.id;
-    const quantity = typeof entry === "string" ? 1 : entry.quantity || 1;
-    if (!inventory[itemId]) {
-      return;
-    }
-    inventory[itemId].quantity -= quantity;
-    if (inventory[itemId].quantity <= 0) {
-      delete inventory[itemId];
-    }
-  });
+  consumeInventoryItems(inventory, items);
   updateInventoryList();
   saveProgress();
 }
 
 function hasItem(itemId, quantity = 1) {
-  return (inventory[itemId]?.quantity || 0) >= quantity;
+  return inventoryHasItem(inventory, itemId, quantity);
 }
 
 function hasRequiredItems(items) {
-  return items.every((entry) => {
-    const itemId = typeof entry === "string" ? entry : entry.id;
-    const quantity = typeof entry === "string" ? 1 : entry.quantity || 1;
-    return hasItem(itemId, quantity);
-  });
+  return inventoryHasRequiredItems(inventory, items);
 }
 
 function updateInventoryList() {
-  inventoryList.innerHTML = "";
-  const items = Object.values(inventory);
-  if (!items.length) {
-    const li = document.createElement("li");
-    li.textContent = "Пусто";
-    inventoryList.appendChild(li);
-    return;
-  }
-
-  items.forEach((item) => {
-    const li = document.createElement("li");
-    li.textContent = item.quantity > 1
-      ? `${item.name} x${item.quantity}`
-      : item.name;
-    inventoryList.appendChild(li);
-  });
+  renderInventoryList(inventoryList, inventory);
 }
 
 function collectObjectRewards(objectId, questIds) {
@@ -1088,20 +1037,13 @@ function showNotification(text) {
 }
 
 function checkQuestProgress() {
-  Object.values(content.quests).forEach((quest) => {
-    if (questStates[quest.id] !== "active") {
-      return;
-    }
-    if (quest.completion?.type === "playerYLessThan" && cat.y < quest.completion.value) {
-      completeQuest(quest.id);
-    }
-    if (quest.completion?.type === "playerInArea" && isPointInArea(cat, quest.completion.area)) {
-      completeQuest(quest.id);
-    }
-    if (quest.completion?.type === "hasItem" && hasItem(quest.completion.itemId, quest.completion.quantity || 1)) {
-      completeQuest(quest.id);
-    }
-  });
+  checkQuestConditions({
+    quests: content.quests,
+    questStates,
+    player: cat,
+    inventory,
+    isPointInArea,
+  }).forEach((questId) => completeQuest(questId));
 }
 
 function checkLocationExits() {
@@ -1117,25 +1059,7 @@ function checkLocationExits() {
 }
 
 function findNearbyExit() {
-  return content.location.exits?.find(({ area }) => isPointInArea(cat, expandArea(area, INTERACT_RADIUS)));
-}
-
-function expandArea(area, padding) {
-  return {
-    x: area.x - padding,
-    y: area.y - padding,
-    width: area.width + padding * 2,
-    height: area.height + padding * 2,
-  };
-}
-
-function isPointInArea(point, area) {
-  return (
-    point.x >= area.x &&
-    point.x <= area.x + area.width &&
-    point.y >= area.y &&
-    point.y <= area.y + area.height
-  );
+  return findNearbyLocationExit(content.location, cat, INTERACT_RADIUS);
 }
 
 function findClosestRoad(startX, startY) {
@@ -1272,28 +1196,20 @@ function processMobRespawns() {
     return;
   }
 
-  const now = Date.now();
-  mobRespawns.forEach((entry) => {
-    if (entry.pending || entry.locationId !== currentLocationId || now < entry.availableAt) {
-      return;
-    }
-
-    const spawn = entry.data.position;
-    if (Math.hypot(cat.x - spawn.x, cat.y - spawn.y) < 96) {
-      entry.availableAt = now + 1500;
-      return;
-    }
-
-    entry.pending = true;
-    spawnMob(entry.data).then((mob) => {
-      mobs.push(mob);
-      mobRespawns = mobRespawns.filter((item) => item !== entry);
-    }).catch((error) => {
+  const result = processRespawnQueue({
+    queue: mobRespawns,
+    mobs,
+    player: cat,
+    currentLocationId,
+    spawnMob,
+    onError: (error) => {
       console.error(error);
-      entry.pending = false;
-      entry.availableAt = Date.now() + 2000;
-    });
+    },
   });
+  mobRespawns = result.queue;
+  mobs = result.mobs;
+  gameState.mobRespawns = mobRespawns;
+  gameState.mobs = mobs;
 }
 
 function resolveNpcPosition(character, roadCluster) {
@@ -1317,24 +1233,12 @@ function resolveNpcPosition(character, roadCluster) {
 }
 
 function findNearestInteractable() {
-  const candidates = [
-    ...npcs.map((npc) => ({
-      type: "npc",
-      entity: npc,
-      radius: INTERACT_RADIUS,
-      distance: Math.hypot(cat.x - npc.x, cat.y - npc.y),
-    })),
-    ...objects.map((object) => ({
-      type: "object",
-      entity: object,
-      radius: object.radius || INTERACT_RADIUS,
-      distance: Math.hypot(cat.x - object.position.x, cat.y - object.position.y),
-    })),
-  ];
-
-  return candidates
-    .filter((candidate) => candidate.distance <= candidate.radius)
-    .sort((a, b) => a.distance - b.distance)[0];
+  return findNearestInteraction({
+    player: cat,
+    npcs,
+    objects,
+    radius: INTERACT_RADIUS,
+  });
 }
 
 function loop() {
@@ -1415,10 +1319,7 @@ function draw() {
   mobs.forEach((mob) => mob.draw(ctx));
   npcs.forEach((npc) => npc.draw(ctx));
 
-  const frameImg = getPlayerFrame();
-  const w = frameImg.width * cat.scale;
-  const h = frameImg.height * cat.scale;
-  ctx.drawImage(frameImg, cat.x - w / 2, cat.y - h / 2, w, h);
+  drawPlayerSprite(ctx, cat, playerFrames);
 
   const activeQuest = Object.values(content.quests).find(
     (quest) => questStates[quest.id] === "active" &&
@@ -1443,6 +1344,7 @@ function draw() {
     player: currentUser ? cat : null,
     npcs,
     mobs,
+    objects,
     exits: content.location.exits || [],
   });
   updateControlLegend(getControlLegendContext());
@@ -1467,64 +1369,32 @@ function updatePlayerAttackAnimation() {
   }
 }
 
-function getPlayerFrame() {
-  if (cat.attacking) {
-    const attackFrames = playerFrames.attack?.[cat.direction];
-    if (attackFrames?.length) {
-      return attackFrames[cat.attackFrame % attackFrames.length];
-    }
-  }
-
-  return playerFrames.walk?.[cat.direction]?.[cat.frame] || playerFrames[cat.direction][cat.frame];
-}
-
 function isPlayerRunning() {
-  return Boolean(keys.ShiftLeft || keys.ShiftRight || keys.Shift);
+  return isRunning(keys);
 }
 
 function getPlayerMoveSpeed() {
-  return cat.speed * (isPlayerRunning() ? PLAYER_RUN_MULTIPLIER : 1);
+  return getMoveSpeed(cat.speed, keys, PLAYER_RUN_MULTIPLIER);
 }
 
 function getCurrentMoveVector() {
-  const x = (isKeyDown(KEY_ALIASES.right) ? 1 : 0) - (isKeyDown(KEY_ALIASES.left) ? 1 : 0);
-  const y = (isKeyDown(KEY_ALIASES.down) ? 1 : 0) - (isKeyDown(KEY_ALIASES.up) ? 1 : 0);
-
-  if (!x && !y) {
-    pressedDirections = [];
-    return { x: 0, y: 0, direction: cat.direction };
-  }
-
-  const length = Math.hypot(x, y) || 1;
-  const direction = getFacingDirectionFromPressedKeys(x, y);
-  return {
-    x: x / length,
-    y: y / length,
-    direction,
-  };
-}
-
-function getFacingDirectionFromPressedKeys(x, y) {
-  while (pressedDirections.length) {
-    const direction = pressedDirections[pressedDirections.length - 1];
-    if (isKeyDown(KEY_ALIASES[direction])) {
-      return direction;
-    }
-    pressedDirections.pop();
-  }
-
-  if (Math.abs(x) >= Math.abs(y)) {
-    return x > 0 ? "right" : "left";
-  }
-  return y > 0 ? "down" : "up";
+  return getMoveVector({
+    keys,
+    aliases: KEY_ALIASES,
+    pressedDirections,
+    fallbackDirection: cat.direction,
+  });
 }
 
 function getControlLegendContext() {
   const interactable = !inDialog ? findNearestInteractable() : null;
+  const nearbyPortal = interactable?.type === "object" && isPortalObject(interactable.entity);
   return {
     isGameActive: Boolean(currentUser && cat),
     isDialogOpen: inDialog,
     nearbyNPC: interactable?.type === "npc",
+    nearbyPortal,
+    nearbyLockedPortal: nearbyPortal && Boolean(interactable.entity.locked),
     nearbyInteractable: Boolean(interactable),
     nearbyExit: !inDialog && Boolean(findNearbyExit()),
     nearbyMob: !inDialog && mobs.some(isMobInAttackRange),
@@ -1689,28 +1559,16 @@ function getNpcLabel(npc) {
 }
 
 function canTurnInQuestToNpc(npc) {
-  return (npc.data.quests || []).some((questId) => {
-    const quest = content.quests[questId];
-    return (
-      quest &&
-      questStates[questId] === "completed" &&
-      hasRequiredItems(quest.turnIn?.requiresItems || [])
-    );
+  return canTurnInQuestToNpcSystem({
+    npc,
+    quests: content.quests,
+    questStates,
+    inventory,
   });
 }
 
 function drawObjects() {
-  objects
-    .filter((object) => object.image)
-    .slice()
-    .sort((a, b) => (a.drawOrder ?? a.position.y) - (b.drawOrder ?? b.position.y))
-    .forEach((object) => {
-      const width = object.width || object.image.width;
-      const height = object.height || object.image.height;
-      const x = object.position.x - width / 2;
-      const y = object.position.y - height;
-      ctx.drawImage(object.image, x, y, width, height);
-    });
+  drawSpriteObjects(ctx, objects);
 }
 
 function drawObjectMarkers() {

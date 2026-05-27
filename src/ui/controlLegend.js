@@ -53,6 +53,8 @@ export function updateControlLegend(context = null) {
   } else {
     if (context.nearbyNPC) {
       lines.push("E — говорить");
+    } else if (context.nearbyPortal) {
+      lines.push(context.nearbyLockedPortal ? "E — осмотреть портал" : "E — войти в портал");
     } else if (context.nearbyExit) {
       lines.push("E — перейти");
     } else if (context.nearbyInteractable) {
