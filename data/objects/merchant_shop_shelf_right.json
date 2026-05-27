@@ -1,0 +1,15 @@
+{
+  "id": "merchant_shop_shelf_right",
+  "name": "Packed Shelf",
+  "type": "decoration",
+  "position": {
+    "x": 1080,
+    "y": 455
+  },
+  "sprite": "assets/objects/shelf.png",
+  "width": 128,
+  "height": 116,
+  "collision": true,
+  "collisionBox": { "x": 1020, "y": 365, "width": 120, "height": 80 },
+  "interactable": false
+}

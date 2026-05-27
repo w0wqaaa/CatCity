@@ -6,6 +6,11 @@
     "x": 1188,
     "y": 515
   },
+  "sprite": "assets/objects/cart.png",
+  "width": 128,
+  "height": 88,
+  "collision": true,
+  "collisionBox": { "x": 1128, "y": 468, "width": 120, "height": 50 },
   "radius": 95,
   "lines": [
     "Телега стоит у дороги. Внутри пахнет пряностями и дорожной пылью.",

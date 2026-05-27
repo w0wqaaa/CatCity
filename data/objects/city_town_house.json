@@ -1,0 +1,20 @@
+{
+  "id": "city_town_house",
+  "name": "Quiet Town House",
+  "type": "building",
+  "position": {
+    "x": 312,
+    "y": 700
+  },
+  "sprite": "assets/objects/town_house.png",
+  "width": 160,
+  "height": 140,
+  "collision": true,
+  "collisionBox": { "x": 232, "y": 604, "width": 160, "height": 80 },
+  "radius": 105,
+  "interactable": true,
+  "lines": [
+    "The door is locked for now.",
+    "This house can become an interior location later."
+  ]
+}

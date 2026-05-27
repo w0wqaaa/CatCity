@@ -6,6 +6,11 @@
     "x": 890,
     "y": 140
   },
+  "sprite": "assets/objects/sign.png",
+  "width": 80,
+  "height": 88,
+  "collision": true,
+  "collisionBox": { "x": 862, "y": 92, "width": 56, "height": 36 },
   "radius": 120,
   "lines": [
     "Указатель: Cat City — севернее, через открытые ворота.",

@@ -5,7 +5,7 @@
   "collisionMap": "src/maps/merchantShopCollisionMap.js",
   "characters": ["merchant"],
   "quests": [],
-  "objects": [],
+  "objects": ["merchant_shop_counter", "merchant_shop_shelf_left", "merchant_shop_shelf_right"],
   "items": ["small_hp_potion", "small_mp_potion", "herb"],
   "shops": ["merchant_shop"],
   "spawn": {

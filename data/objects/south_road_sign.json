@@ -6,6 +6,11 @@
     "x": 640,
     "y": 352
   },
+  "sprite": "assets/objects/sign.png",
+  "width": 80,
+  "height": 88,
+  "collision": true,
+  "collisionBox": { "x": 612, "y": 304, "width": 56, "height": 36 },
   "radius": 110,
   "lines": [
     "На знаке написано: Cat City — север, пасека — юго-восток, старая тропа — запад.",

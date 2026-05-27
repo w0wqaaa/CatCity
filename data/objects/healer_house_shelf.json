@@ -1,0 +1,15 @@
+{
+  "id": "healer_house_shelf",
+  "name": "Herb Shelf",
+  "type": "decoration",
+  "position": {
+    "x": 1048,
+    "y": 450
+  },
+  "sprite": "assets/objects/shelf.png",
+  "width": 128,
+  "height": 116,
+  "collision": true,
+  "collisionBox": { "x": 988, "y": 360, "width": 120, "height": 80 },
+  "interactable": false
+}

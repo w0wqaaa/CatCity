@@ -6,6 +6,10 @@
     "x": 315,
     "y": 780
   },
+  "sprite": "assets/objects/herb_patch.png",
+  "width": 128,
+  "height": 80,
+  "collision": false,
   "radius": 100,
   "lines": [
     "У тропы растут светлые луговые травы.",

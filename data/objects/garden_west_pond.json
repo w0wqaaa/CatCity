@@ -1,0 +1,15 @@
+{
+  "id": "garden_west_pond",
+  "name": "Still Pond",
+  "type": "decoration",
+  "position": {
+    "x": 360,
+    "y": 520
+  },
+  "sprite": "assets/objects/pond.png",
+  "width": 184,
+  "height": 112,
+  "collision": true,
+  "collisionBox": { "x": 276, "y": 452, "width": 168, "height": 72 },
+  "interactable": false
+}

@@ -1,0 +1,15 @@
+{
+  "id": "garden_broken_fence",
+  "name": "Broken Fence",
+  "type": "decoration",
+  "position": {
+    "x": 740,
+    "y": 745
+  },
+  "sprite": "assets/objects/broken_fence.png",
+  "width": 184,
+  "height": 96,
+  "collision": true,
+  "collisionBox": { "x": 650, "y": 700, "width": 180, "height": 40 },
+  "interactable": false
+}

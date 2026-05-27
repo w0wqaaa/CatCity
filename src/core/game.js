@@ -1,5 +1,5 @@
-import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=player-choice-1";
-import { loadGameContent, loadJson } from "./dataLoader.js?v=gameplay-economy-1";
+import { loadImage, loadMobFrames, loadNpcFrames, loadPlayerFrames } from "./assetLoader.js?v=sega16-v2";
+import { loadGameContent, loadJson } from "./dataLoader.js?v=sega16-v2";
 import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=login-fix-1";
 import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
@@ -20,6 +20,7 @@ const PLAYER_ATTACK_RANGE = 48;
 const PLAYER_ATTACK_WIDTH = 48;
 const PLAYER_ATTACK_COOLDOWN = 350;
 const PLAYER_RUN_MULTIPLIER = 1.7;
+const ART_VERSION = "sega16-v2";
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const RUN_KEYS = new Set(["ShiftLeft", "ShiftRight"]);
 const KEY_ALIASES = {
@@ -108,6 +109,10 @@ const notification = document.createElement("div");
 notification.id = "notification";
 notification.classList.add("hidden");
 document.body.appendChild(notification);
+
+function withArtVersion(path) {
+  return path.includes("?") ? `${path}&v=${ART_VERSION}` : `${path}?v=${ART_VERSION}`;
+}
 
 async function startGame() {
   initMinimap();
@@ -266,7 +271,7 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   currentLocationId = locationId;
   content = await loadGameContent(locationId);
   collisionMap = content.collisionMap;
-  mapBackground = await loadImage(content.location.map);
+  mapBackground = await loadImage(withArtVersion(content.location.map));
 
   const centerTileX = Math.floor(collisionMap[0].length / 2);
   const centerTileY = Math.floor(collisionMap.length / 2);
@@ -275,7 +280,7 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   const nextCat = {
     x: playerTile.x * TILE_SIZE + TILE_SIZE / 2,
     y: playerTile.y * TILE_SIZE + TILE_SIZE / 2,
-    scale: 0.1,
+    scale: 2,
     direction: "down",
     frame: 0,
     speed: 2,
@@ -290,7 +295,7 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   npcs = await createNpcs();
   mobs = await createMobs();
   mobRespawns = [];
-  objects = createObjects();
+  objects = await createObjects();
   showNotification(content.location.name);
   if (!options.skipSave) {
     saveProgress();
@@ -1204,10 +1209,23 @@ async function createNpcs() {
   }));
 }
 
-function createObjects() {
-  return (content.location.objects || [])
+async function createObjects() {
+  const locationObjects = (content.location.objects || [])
     .map((objectId) => content.objects[objectId])
     .filter(Boolean);
+
+  await Promise.all(locationObjects.map(async (object) => {
+    if (!object.sprite) {
+      return;
+    }
+    try {
+      object.image = await loadImage(withArtVersion(object.sprite));
+    } catch (error) {
+      console.warn(`Failed to load object sprite: ${object.sprite}`, error);
+    }
+  }));
+
+  return locationObjects;
 }
 
 async function createMobs() {
@@ -1371,7 +1389,7 @@ function draw() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mapBackground, 0, 0);
-  drawObjectMarkers();
+  drawObjects();
   mobs.forEach((mob) => mob.draw(ctx));
   npcs.forEach((npc) => npc.draw(ctx));
 
@@ -1389,6 +1407,7 @@ function draw() {
   }
 
   drawExitMarkers();
+  drawObjectMarkers();
   drawQuestTurnInMarkers();
   drawNpcNameLabels();
 
@@ -1628,9 +1647,23 @@ function canTurnInQuestToNpc(npc) {
   });
 }
 
+function drawObjects() {
+  objects
+    .filter((object) => object.image)
+    .slice()
+    .sort((a, b) => (a.drawOrder ?? a.position.y) - (b.drawOrder ?? b.position.y))
+    .forEach((object) => {
+      const width = object.width || object.image.width;
+      const height = object.height || object.image.height;
+      const x = object.position.x - width / 2;
+      const y = object.position.y - height;
+      ctx.drawImage(object.image, x, y, width, height);
+    });
+}
+
 function drawObjectMarkers() {
   highlightPulse += 0.01;
-  objects.forEach((object) => {
+  objects.filter((object) => object.interactable !== false).forEach((object) => {
     const marker = object.marker || object.position;
     const size = 7 + Math.sin(highlightPulse * 2) * 2;
 
@@ -1691,7 +1724,37 @@ function checkCollision(x, y) {
   const offsetY = 10;
   const tileX = Math.floor(x / TILE_SIZE);
   const tileY = Math.floor((y + offsetY) / TILE_SIZE);
-  return collisionMap[tileY]?.[tileX] !== 0;
+  return collisionMap[tileY]?.[tileX] !== 0 || isBlockedByObject(x, y + offsetY);
+}
+
+function isBlockedByObject(x, y) {
+  return objects.some((object) => {
+    if (!object.collision) {
+      return false;
+    }
+    const box = getObjectCollisionBox(object);
+    return (
+      x >= box.x &&
+      x <= box.x + box.width &&
+      y >= box.y &&
+      y <= box.y + box.height
+    );
+  });
+}
+
+function getObjectCollisionBox(object) {
+  if (object.collisionBox) {
+    return object.collisionBox;
+  }
+
+  const width = object.collisionWidth || object.width || 0;
+  const height = object.collisionHeight || Math.min(object.height || 0, 64);
+  return {
+    x: object.position.x - width / 2,
+    y: object.position.y - height,
+    width,
+    height,
+  };
 }
 
 startGame();

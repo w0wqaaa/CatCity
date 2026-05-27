@@ -1,0 +1,15 @@
+{
+  "id": "garden_large_plant",
+  "name": "Huge Plant",
+  "type": "decoration",
+  "position": {
+    "x": 1230,
+    "y": 750
+  },
+  "sprite": "assets/objects/monster_plant.png",
+  "width": 96,
+  "height": 104,
+  "collision": true,
+  "collisionBox": { "x": 1190, "y": 686, "width": 80, "height": 62 },
+  "interactable": false
+}

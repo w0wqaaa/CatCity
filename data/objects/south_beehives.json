@@ -6,6 +6,11 @@
     "x": 1140,
     "y": 760
   },
+  "sprite": "assets/objects/beehives.png",
+  "width": 144,
+  "height": 96,
+  "collision": true,
+  "collisionBox": { "x": 1080, "y": 704, "width": 120, "height": 58 },
   "radius": 95,
   "lines": [
     "Ульи тихо гудят. Пчелы кружат над солнечными цветами.",

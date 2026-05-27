@@ -6,6 +6,11 @@
     "x": 520,
     "y": 390
   },
+  "sprite": "assets/objects/merchant_shop_house.png",
+  "width": 192,
+  "height": 168,
+  "collision": true,
+  "collisionBox": { "x": 424, "y": 276, "width": 192, "height": 94 },
   "radius": 130,
   "interactable": true,
   "actionType": "enterLocation",

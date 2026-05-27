@@ -1,0 +1,15 @@
+{
+  "id": "merchant_shop_counter",
+  "name": "Shop Counter",
+  "type": "decoration",
+  "position": {
+    "x": 768,
+    "y": 360
+  },
+  "sprite": "assets/objects/shop_counter.png",
+  "width": 220,
+  "height": 96,
+  "collision": true,
+  "collisionBox": { "x": 658, "y": 296, "width": 220, "height": 58 },
+  "interactable": false
+}

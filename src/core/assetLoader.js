@@ -3,7 +3,7 @@ import { ASSET_PATHS } from "../config/gameConfig.js?v=login-fix-1";
 const imageCache = new Map();
 const DIRECTIONS = ["down", "up", "left", "right"];
 const FRAME_SIZE = 32;
-const SPRITESHEET_VERSION = "source-slices-4";
+const SPRITESHEET_VERSION = "sega16-v2";
 
 export async function loadImage(src) {
   if (imageCache.has(src)) {
@@ -28,7 +28,7 @@ export async function loadPlayerFrames(character = "boy") {
   const loadFrames = async (prefix) => {
     const frames = [];
     for (let i = 1; i <= 3; i++) {
-      frames.push(await loadImage(`${prefix}_${i}.png`));
+      frames.push(await loadImage(`${prefix}_${i}.png?v=${SPRITESHEET_VERSION}`));
     }
     return frames;
   };

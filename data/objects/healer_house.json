@@ -1,0 +1,26 @@
+{
+  "id": "healer_house",
+  "name": "Healer House",
+  "type": "building",
+  "position": {
+    "x": 1040,
+    "y": 390
+  },
+  "sprite": "assets/objects/healer_house.png",
+  "width": 176,
+  "height": 156,
+  "collision": true,
+  "collisionBox": { "x": 952, "y": 282, "width": 176, "height": 90 },
+  "radius": 130,
+  "interactable": true,
+  "actionType": "enterLocation",
+  "to": "healer_house",
+  "spawn": {
+    "x": 768,
+    "y": 840,
+    "direction": "up"
+  },
+  "lines": [
+    "A clean herbal scent comes from inside."
+  ]
+}

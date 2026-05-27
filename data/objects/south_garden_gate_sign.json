@@ -6,6 +6,11 @@
     "x": 890,
     "y": 900
   },
+  "sprite": "assets/objects/sign.png",
+  "width": 80,
+  "height": 88,
+  "collision": true,
+  "collisionBox": { "x": 862, "y": 852, "width": 56, "height": 36 },
   "radius": 120,
   "lines": [
     "Указатель: Заросший сад — южнее, за старой дорогой.",

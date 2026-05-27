@@ -6,6 +6,11 @@
     "x": 875,
     "y": 708
   },
+  "sprite": "assets/objects/well.png",
+  "width": 96,
+  "height": 96,
+  "collision": true,
+  "collisionBox": { "x": 831, "y": 654, "width": 88, "height": 58 },
   "radius": 90,
   "lines": [
     "Старый колодец давно не используют.",

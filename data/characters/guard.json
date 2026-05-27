@@ -10,7 +10,7 @@
   ],
   "spriteSheetBase": "assets/npcs/guard",
   "spriteSheetName": "guard",
-  "idleFrameCount": 3,
-  "walkFrameCount": 3,
-  "attackFrameCount": 3
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4
 }

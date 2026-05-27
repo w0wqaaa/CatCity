@@ -1,0 +1,15 @@
+{
+  "id": "healer_house_bed",
+  "name": "Healer Bed",
+  "type": "decoration",
+  "position": {
+    "x": 768,
+    "y": 520
+  },
+  "sprite": "assets/objects/bed.png",
+  "width": 132,
+  "height": 112,
+  "collision": true,
+  "collisionBox": { "x": 702, "y": 432, "width": 132, "height": 80 },
+  "interactable": false
+}

@@ -1,0 +1,15 @@
+{
+  "id": "garden_old_ruins",
+  "name": "Old Ruins",
+  "type": "decoration",
+  "position": {
+    "x": 1060,
+    "y": 540
+  },
+  "sprite": "assets/objects/ruins.png",
+  "width": 152,
+  "height": 130,
+  "collision": true,
+  "collisionBox": { "x": 990, "y": 450, "width": 140, "height": 86 },
+  "interactable": false
+}

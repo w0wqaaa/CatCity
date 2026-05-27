@@ -32,7 +32,7 @@
     }
   ],
   "quests": [],
-  "objects": [],
+  "objects": ["garden_west_pond", "garden_old_ruins", "garden_broken_fence", "garden_large_plant"],
   "items": [],
   "spawn": {
     "x": 768,
