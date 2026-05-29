@@ -21,6 +21,7 @@ import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from
 import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
 import { createShopPurchase } from "../systems/shopSystem.js";
 import { initPuzzleGame, isPuzzleOpen, openPuzzleGame, getPuzzleResults } from "../ui/puzzleGame.js";
+import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
 
@@ -89,6 +90,7 @@ let echoMazeState = createDefaultEchoMazeState();
 let echoMazeResults = [];
 let puzzleGameResults = [];
 let snakeGameResults  = [];
+let tankGameResults   = [];
 let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
 let seenLocationGuides = {};
 let playerCharacter = "boy";
@@ -205,6 +207,7 @@ async function startGame() {
   initRunTimer();
   initPuzzleGame();
   initSnakeGame();
+  initTankGame();
   initTutorialGuide();
   initShopUi();
   setupEventListeners();
@@ -902,6 +905,11 @@ async function tryTalk() {
     return true;
   }
 
+  if (isTankPortal(interactable.entity)) {
+    handleTankPortal(interactable.entity);
+    return true;
+  }
+
   if (isPortalObject(interactable.entity)) {
     handlePortalInteraction(interactable.entity);
     return true;
@@ -917,7 +925,18 @@ async function tryTalk() {
 }
 
 function isPortalObject(object) {
-  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle" || object?.actionType === "snake";
+  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle" || object?.actionType === "snake" || object?.actionType === "tank";
+}
+
+function isTankPortal(object) { return object?.actionType === "tank"; }
+
+function handleTankPortal(portal) {
+  if (portal.locked) { showNotification(portal.lockedMessage || "Портал заблокирован."); return; }
+  openTankGame({
+    playerName: currentUser || "Игрок",
+    savedResults: tankGameResults,
+    onClose: () => { tankGameResults = getTankResults(); saveProgress(); },
+  });
 }
 
 function isSnakePortal(object) {
@@ -1689,7 +1708,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTutorialOpen()) {
+  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTankOpen() || isTutorialOpen()) {
     return;
   }
 

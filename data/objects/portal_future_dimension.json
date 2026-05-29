@@ -1,6 +1,6 @@
 {
   "id": "portal_future_dimension",
-  "name": "Будущее измерение",
+  "name": "Танковый Бой",
   "type": "portal",
   "position": {
     "x": 768,
@@ -10,14 +10,13 @@
     "x": 768,
     "y": 696
   },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
   "radius": 105,
   "interactable": true,
-  "actionType": "portal",
-  "targetMode": "future_dimension",
-  "locked": true,
-  "description": "Резерв под будущий игровой режим."
+  "actionType": "tank",
+  "locked": false,
+  "description": "Старые машины войны ждут своего часа. Уничтожь всех ботов, защити базу."
 }

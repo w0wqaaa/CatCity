@@ -1334,3 +1334,90 @@ button {
   transition: background 0.15s;
 }
 #equipmentButton:hover { background: rgba(70,35,120,0.9); color: #cc99ff; }
+
+/* ═══════════════════════════════════════════
+   TANK GAME OVERLAY  (same style as snake/puzzle)
+   ═══════════════════════════════════════════ */
+#tankOverlay {
+  position: fixed; inset: 0;
+  background: rgba(4, 2, 14, 0.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+}
+#tankOverlay.hidden { display: none; }
+
+#tankPanel {
+  background: #100820; border: 2px solid #7744cc; border-radius: 14px;
+  overflow: hidden; box-shadow: 0 0 60px rgba(120,60,255,0.4);
+  width: 580px; max-width: calc(100vw - 24px); display: flex; flex-direction: column;
+}
+
+#tankTopBar {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  background: rgba(55,18,95,0.7); border-bottom: 1px solid rgba(120,70,200,0.4);
+  height: 48px; box-sizing: border-box; flex-shrink: 0;
+}
+#tankTitle { font-family: monospace; font-size: 15px; font-weight: bold; color: #cc99ff; flex: 1; }
+#tankTimerBox { font-family: monospace; font-size: 19px; color: #ffdd55; font-weight: bold; letter-spacing: 2px; min-width: 90px; text-align: center; }
+#tankTopBtns { display: flex; gap: 6px; flex-shrink: 0; }
+
+#tankHowBtn {
+  background: rgba(80,40,140,0.8); color: #cc99ff; border: 1px solid #7744cc;
+  border-radius: 50%; width: 30px; height: 30px;
+  font-family: monospace; font-size: 16px; font-weight: bold;
+  cursor: pointer; padding: 0; line-height: 30px; text-align: center;
+}
+#tankHowBtn:hover { background: rgba(120,60,200,0.9); }
+
+#tankExitBtn {
+  background: #5e1a1a; color: #ffaaaa; border: 1px solid #993333;
+  border-radius: 8px; padding: 5px 13px;
+  font-family: monospace; font-size: 13px; font-weight: bold;
+  cursor: pointer; height: 30px; transition: background 0.15s;
+}
+#tankExitBtn:hover { background: #992222; color: #fff; }
+
+/* Инструкция */
+#tankInstr { background: rgba(14,7,30,0.97); border-bottom: 1px solid rgba(100,60,180,0.4); padding: 16px 20px; }
+#tankInstr.hidden { display: none; }
+#tankInstrContent { max-width: 460px; margin: 0 auto; }
+.tk-instr-title { font-family: monospace; font-size: 17px; font-weight: bold; color: #cc99ff; margin-bottom: 10px; }
+.tk-instr-list { font-family: monospace; font-size: 13px; color: #c0b0e0; line-height: 1.9; padding-left: 18px; margin: 0 0 12px; }
+.tk-instr-list li b { color: #ffdd88; }
+#tankInstrClose {
+  background: #2a4a2a; color: #88ff99; border: 1px solid #447744;
+  border-radius: 8px; padding: 8px 22px; font-family: monospace;
+  font-size: 14px; font-weight: bold; cursor: pointer; display: block; margin: 0 auto;
+}
+#tankInstrClose:hover { background: #3a6a3a; }
+
+/* Игровая зона */
+#tankBoardWrap {
+  display: flex; align-items: flex-start; padding: 12px; gap: 12px;
+  height: 440px; box-sizing: border-box; flex-shrink: 0;
+}
+#tankBoard {
+  display: block; image-rendering: pixelated;
+  border-radius: 4px; border: 2px solid rgba(90,50,170,0.7);
+  flex-shrink: 0; width: 416px; height: 416px;
+}
+
+/* Сайдбар */
+#tankSide {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; width: 110px; flex-shrink: 0;
+}
+.tk-side-label { font-family: monospace; font-size: 10px; color: #7755aa; text-transform: uppercase; letter-spacing: 1px; }
+#tankLives { font-family: monospace; font-size: 14px; color: #ff6688; font-weight: bold; text-align: center; }
+#tankScore { font-family: monospace; font-size: 26px; color: #ffdd55; font-weight: bold; }
+#tankBotsLeft { font-family: monospace; font-size: 22px; color: #cc4444; font-weight: bold; }
+#tankBest { font-family: monospace; font-size: 11px; color: #7766aa; text-align: left; line-height: 1.7; width: 110px; margin-top: 8px; }
+#tankBest b { color: #aa88ee; display: block; margin-bottom: 2px; }
+.tk-row { display: block; color: #9988bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-no-results { color: #554466; font-style: italic; }
+#tankRetryBtn {
+  background: #1a3320; color: #77ee88; border: 1px solid #336644;
+  border-radius: 8px; padding: 7px 0; font-family: monospace; font-size: 12px;
+  font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px;
+}
+#tankRetryBtn:hover { background: #254530; color: #ccffcc; }
