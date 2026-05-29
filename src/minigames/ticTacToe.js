@@ -26,7 +26,7 @@ export function createTicTacToe(container, { mode, onResult }) {
   const canvas = document.createElement("canvas");
   canvas.width  = W;
   canvas.height = H;
-  canvas.style.cssText = "display:block;cursor:pointer;margin:0 auto;image-rendering:pixelated;border-radius:6px";
+  canvas.style.cssText = `display:block;cursor:pointer;margin:0 auto;image-rendering:pixelated;border-radius:6px;width:${W}px;height:${H}px`;
 
   const ctx = canvas.getContext("2d");
 
