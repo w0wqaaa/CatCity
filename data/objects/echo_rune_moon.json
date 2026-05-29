@@ -1,0 +1,17 @@
+{
+  "id": "echo_rune_moon",
+  "name": "Руна Луны",
+  "type": "rune",
+  "orderKey": "moon",
+  "position": {
+    "x": 416,
+    "y": 680
+  },
+  "sprite": "assets/objects/runes/rune_moon_inactive.png",
+  "activeSprite": "assets/objects/runes/rune_moon_active.png",
+  "width": 40,
+  "height": 40,
+  "collision": false,
+  "radius": 72,
+  "interactable": true
+}

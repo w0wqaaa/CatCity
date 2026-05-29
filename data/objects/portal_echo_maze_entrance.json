@@ -1,0 +1,20 @@
+{
+  "id": "portal_echo_maze_entrance",
+  "name": "Входной портал",
+  "type": "portal",
+  "position": {
+    "x": 768,
+    "y": 900
+  },
+  "marker": {
+    "x": 768,
+    "y": 836
+  },
+  "sprite": "assets/objects/portals/portal_echo_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 90,
+  "interactable": false,
+  "description": "Портал, через который игрок вошел в лабиринт."
+}

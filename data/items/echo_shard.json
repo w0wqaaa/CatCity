@@ -1,0 +1,9 @@
+{
+  "id": "echo_shard",
+  "name": "Осколок эха",
+  "description": "Мерцающий фрагмент из Эхо-лабиринта. Возможно, откроет другие порталы.",
+  "type": "quest",
+  "effect": null,
+  "value": 0,
+  "icon": "assets/items/echo_shard.png"
+}

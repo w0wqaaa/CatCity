@@ -1,0 +1,17 @@
+{
+  "id": "echo_rune_leaf",
+  "name": "Руна Листа",
+  "type": "rune",
+  "orderKey": "leaf",
+  "position": {
+    "x": 416,
+    "y": 360
+  },
+  "sprite": "assets/objects/runes/rune_leaf_inactive.png",
+  "activeSprite": "assets/objects/runes/rune_leaf_active.png",
+  "width": 40,
+  "height": 40,
+  "collision": false,
+  "radius": 72,
+  "interactable": true
+}

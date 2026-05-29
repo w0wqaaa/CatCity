@@ -61,6 +61,19 @@ export function updateQuestStatus(questLog, questId, status) {
   }
 }
 
+export function abandonQuest({ questId, questStates, questLog }) {
+  if (!questStates[questId] || questStates[questId] === "delivered") {
+    return false;
+  }
+
+  delete questStates[questId];
+  const index = questLog.findIndex((item) => item.id === questId);
+  if (index >= 0) {
+    questLog.splice(index, 1);
+  }
+  return true;
+}
+
 export function isQuestStarted(questStates, questId) {
   return Boolean(questStates[questId]);
 }

@@ -20,6 +20,9 @@ export class GameState {
     this.questLog = [];
     this.questStates = {};
     this.inventory = {};
+    this.echoMazeState = null;
+    this.echoMazeResults = [];
+    this.seenLocationGuides = {};
     this.dialog = {
       isOpen: false,
       activeNpc: null,
@@ -44,12 +47,15 @@ export class GameState {
     this.objects = objects;
   }
 
-  setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats }) {
+  setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats, echoMazeState, echoMazeResults, seenLocationGuides }) {
     this.playerCharacter = playerCharacter || "boy";
     this.currentLocationId = currentLocationId || "city";
     this.questStates = questStates || {};
     this.questLog = questLog || [];
     this.inventory = inventory || {};
     this.playerStats = playerStats || { ...this.defaultPlayerStats };
+    this.echoMazeState = echoMazeState || null;
+    this.echoMazeResults = echoMazeResults || [];
+    this.seenLocationGuides = seenLocationGuides || {};
   }
 }

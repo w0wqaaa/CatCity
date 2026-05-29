@@ -1,0 +1,28 @@
+{
+  "id": "portal_echo_maze",
+  "name": "Портал в Эхо-лабиринт",
+  "type": "portal",
+  "position": {
+    "x": 424,
+    "y": 288
+  },
+  "marker": {
+    "x": 424,
+    "y": 224
+  },
+  "sprite": "assets/objects/portals/portal_echo_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "echo_maze",
+  "locked": false,
+  "spawn": {
+    "x": 768,
+    "y": 832,
+    "direction": "up"
+  },
+  "description": "Портал ведет в темное измерение рун."
+}

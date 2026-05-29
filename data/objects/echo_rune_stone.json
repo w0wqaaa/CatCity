@@ -1,0 +1,17 @@
+{
+  "id": "echo_rune_stone",
+  "name": "Руна Камня",
+  "type": "rune",
+  "orderKey": "stone",
+  "position": {
+    "x": 1120,
+    "y": 360
+  },
+  "sprite": "assets/objects/runes/rune_stone_inactive.png",
+  "activeSprite": "assets/objects/runes/rune_stone_active.png",
+  "width": 40,
+  "height": 40,
+  "collision": false,
+  "radius": 72,
+  "interactable": true
+}

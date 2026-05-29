@@ -69,6 +69,12 @@ export function updateMinimap(state = null) {
       const color = portal.locked ? "#b86cff" : "#65f4d0";
       drawPoint(portal.position.x, portal.position.y, offsetX, offsetY, scale, color, 3.2);
     });
+  objects
+    .filter((object) => object.type === "rune")
+    .forEach((rune) => {
+      const color = rune.isActive ? "#7dfff1" : "#ffd85a";
+      drawPoint(rune.position.x, rune.position.y, offsetX, offsetY, scale, color, 2.8);
+    });
   mobs.forEach((mob) => drawPoint(mob.x, mob.y, offsetX, offsetY, scale, "#ff5858", 2.6));
   npcs.forEach((npc) => drawPoint(npc.x, npc.y, offsetX, offsetY, scale, "#ffd85a", 2.8));
   drawPoint(player.x, player.y, offsetX, offsetY, scale, "#79c6ff", 4);

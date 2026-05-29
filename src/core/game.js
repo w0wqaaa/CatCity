@@ -5,15 +5,17 @@ import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=lo
 import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
 import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
-import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=portal-valley-1";
-import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=portal-valley-1";
+import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=echo-maze-1";
+import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=echo-maze-1";
+import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
+import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
 import { renderInventoryList, renderPlayerStats, renderQuestList } from "../ui/uiManager.js";
 import { attackFirstMob, canAttack, damagePlayer as applyPlayerDamage, getAttackBox as buildAttackBox, getMobBox, killMob, rectanglesOverlap, restorePlayerAfterDeath } from "../systems/combatSystem.js";
 import { getNpcDialogStage, openDialogState, advanceDialog } from "../systems/dialogSystem.js";
-import { addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats } from "../systems/inventorySystem.js";
+import { addGold as addPlayerGold, addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats } from "../systems/inventorySystem.js";
 import { findNearestInteractable as findNearestInteraction, findNearbyExit as findNearbyLocationExit, isPointInArea } from "../systems/interactionSystem.js";
 import { getCurrentMoveVector as getMoveVector, getMoveSpeed, isKeyDown as isAliasDown, isRunning } from "../systems/movementSystem.js";
-import { canTurnInQuestToNpc as canTurnInQuestToNpcSystem, checkQuestConditions, completeQuest as completeQuestState, finishQuest as finishQuestState, startQuest as startQuestState, updateQuestStatus as updateQuestStatusState } from "../systems/questSystem.js";
+import { abandonQuest as abandonQuestState, canTurnInQuestToNpc as canTurnInQuestToNpcSystem, checkQuestConditions, completeQuest as completeQuestState, finishQuest as finishQuestState, startQuest as startQuestState, updateQuestStatus as updateQuestStatusState } from "../systems/questSystem.js";
 import { drawObjects as drawSpriteObjects, drawPlayer as drawPlayerSprite } from "../systems/renderSystem.js";
 import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from "../systems/respawnSystem.js";
 import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
@@ -35,6 +37,10 @@ const PLAYER_ATTACK_TICKS = 20;
 const PLAYER_ATTACK_FRAME_TICKS = 5;
 const PLAYER_RUN_MULTIPLIER = 1.7;
 const ART_VERSION = "attack-anim-1";
+const ECHO_MAZE_LOCATION_ID = "echo_maze";
+const ECHO_MAZE_SEQUENCE = ["leaf", "stone", "moon", "flame"];
+const ECHO_MAZE_REWARD_GOLD = 25;
+const ECHO_SHADOW_SPAWN_OFFSET = 72;
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const RUN_KEYS = new Set(["ShiftLeft", "ShiftRight"]);
 const KEY_ALIASES = {
@@ -46,6 +52,7 @@ const KEY_ALIASES = {
   quests: ["KeyQ", "q", "й"],
   inventory: ["KeyI", "i", "ш"],
   minimap: ["KeyM", "m", "ь"],
+  guide: ["KeyH", "h", "р"],
 };
 
 if (window.location.search) {
@@ -75,6 +82,9 @@ let questLog = [];
 let questStates = {};
 let inventory = {};
 let playerStats = { ...PLAYER_DEFAULT_STATS };
+let echoMazeState = createDefaultEchoMazeState();
+let echoMazeResults = [];
+let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
 let inDialog = false;
@@ -112,6 +122,7 @@ const questsPanel = document.getElementById("questsPanel");
 const questsList = document.getElementById("questsList");
 const closeQuests = document.getElementById("closeQuests");
 const inventoryButton = document.getElementById("inventoryButton");
+const guideButton = document.getElementById("guideButton");
 const inventoryPanel = document.getElementById("inventoryPanel");
 const inventoryList = document.getElementById("inventoryList");
 const closeInventory = document.getElementById("closeInventory");
@@ -125,6 +136,51 @@ notification.id = "notification";
 notification.classList.add("hidden");
 document.body.appendChild(notification);
 
+function createDefaultEchoMazeState() {
+  return {
+    sequence: [...ECHO_MAZE_SEQUENCE],
+    progressIndex: 0,
+    solved: false,
+    activatedRunes: [],
+    rewardClaimed: false,
+    exitPortalUnlocked: false,
+    runStartedAt: null,
+    completedTimeMs: null,
+  };
+}
+
+function normalizeEchoMazeState(savedState = null) {
+  const state = {
+    ...createDefaultEchoMazeState(),
+    ...(savedState || {}),
+    sequence: [...ECHO_MAZE_SEQUENCE],
+    activatedRunes: Array.isArray(savedState?.activatedRunes)
+      ? [...savedState.activatedRunes]
+      : [],
+  };
+  if (state.solved) {
+    state.exitPortalUnlocked = true;
+    state.activatedRunes = [...ECHO_MAZE_SEQUENCE];
+  }
+  return state;
+}
+
+function normalizeEchoMazeResults(savedResults = null) {
+  return Array.isArray(savedResults)
+    ? savedResults
+        .filter((result) => Number.isFinite(result.timeMs))
+        .sort((a, b) => a.timeMs - b.timeMs)
+        .slice(0, 10)
+    : [];
+}
+
+function normalizeSeenLocationGuides(savedGuides = null) {
+  if (Array.isArray(savedGuides)) {
+    return Object.fromEntries(savedGuides.map((locationId) => [locationId, true]));
+  }
+  return savedGuides && typeof savedGuides === "object" ? { ...savedGuides } : {};
+}
+
 function withArtVersion(path) {
   return path.includes("?") ? `${path}&v=${ART_VERSION}` : `${path}?v=${ART_VERSION}`;
 }
@@ -132,6 +188,8 @@ function withArtVersion(path) {
 async function startGame() {
   initMinimap();
   initControlLegend();
+  initLocationGuide();
+  initRunTimer();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -180,6 +238,7 @@ function setupEventListeners() {
   questsButton.addEventListener("click", toggleQuestPanel);
 
   inventoryButton.addEventListener("click", toggleInventoryPanel);
+  guideButton.addEventListener("click", openCurrentLocationGuide);
 
   if (closeQuests) {
     closeQuests.addEventListener("click", () => {
@@ -270,6 +329,7 @@ function logout() {
   inventoryPanel.classList.remove("visible");
   closeShop();
   dialogBox.classList.add("hidden");
+  closeLocationGuide();
   ui.classList.add("hidden");
   loginScreen.classList.remove("hidden");
   updateMinimap();
@@ -319,6 +379,8 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   mobs = await createMobs();
   mobRespawns = [];
   objects = await createObjects();
+  applyEchoMazeRuntimeState();
+  handleLocationRunStart();
   gameState.setLocationRuntime({ locationId, content, collisionMap, player: cat, npcs, mobs, objects });
   gameState.mobRespawns = mobRespawns;
   showNotification(content.location.name);
@@ -327,7 +389,80 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
   }
   setTimeout(() => {
     isTransitioning = false;
+    showLocationGuideIfNeeded(content.location.id);
   }, 250);
+}
+
+function showLocationGuideIfNeeded(locationId) {
+  if (!currentUser || seenLocationGuides[locationId]) {
+    return;
+  }
+
+  clearInputState();
+  openLocationGuide(locationId, {
+    onClose: () => {
+      seenLocationGuides[locationId] = true;
+      gameState.seenLocationGuides = seenLocationGuides;
+      saveProgress();
+    },
+  });
+}
+
+function openCurrentLocationGuide() {
+  if (!currentUser || !content?.location?.id) {
+    return;
+  }
+
+  closeMenus();
+  clearInputState();
+  openLocationGuide(content.location.id);
+}
+
+function handleLocationRunStart() {
+  if (content.location.id !== ECHO_MAZE_LOCATION_ID) {
+    updateRunTimer({ visible: false });
+    return;
+  }
+
+  if (!echoMazeState.solved && !echoMazeState.runStartedAt) {
+    echoMazeState.runStartedAt = Date.now();
+    echoMazeState.completedTimeMs = null;
+    saveProgress();
+  }
+  updateEchoMazeTimerUi();
+}
+
+function updateEchoMazeTimerUi() {
+  if (content?.location?.id !== ECHO_MAZE_LOCATION_ID) {
+    updateRunTimer({ visible: false });
+    return;
+  }
+
+  const elapsedMs = echoMazeState.solved
+    ? echoMazeState.completedTimeMs || 0
+    : Date.now() - (echoMazeState.runStartedAt || Date.now());
+  updateRunTimer({
+    visible: true,
+    elapsedMs,
+    results: echoMazeResults,
+  });
+}
+
+function recordEchoMazeResult(timeMs) {
+  if (!Number.isFinite(timeMs) || timeMs <= 0) {
+    return;
+  }
+
+  echoMazeResults.push({
+    player: currentUser,
+    timeMs: Math.round(timeMs),
+    mode: "solo",
+    completedAt: new Date().toISOString(),
+  });
+  echoMazeResults = echoMazeResults
+    .sort((a, b) => a.timeMs - b.timeMs)
+    .slice(0, 10);
+  gameState.echoMazeResults = echoMazeResults;
 }
 
 function getSpawnPoint(centerTileX, centerTileY, spawnOverride) {
@@ -364,7 +499,13 @@ function loadProgress() {
   questLog = save?.questLog || [];
   inventory = save?.inventory || {};
   playerStats = normalizePlayerStats(save?.playerStats);
-  gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats });
+  echoMazeState = normalizeEchoMazeState(save?.echoMazeState);
+  echoMazeResults = normalizeEchoMazeResults(save?.echoMazeResults);
+  seenLocationGuides = normalizeSeenLocationGuides(save?.seenLocationGuides);
+  gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats, echoMazeState, echoMazeResults, seenLocationGuides });
+  gameState.echoMazeState = echoMazeState;
+  gameState.echoMazeResults = echoMazeResults;
+  gameState.seenLocationGuides = seenLocationGuides;
   gameState.saveData = save;
 }
 
@@ -387,6 +528,9 @@ function saveProgress() {
     questStates,
     questLog,
     inventory,
+    echoMazeState,
+    echoMazeResults,
+    seenLocationGuides,
   });
   gameState.saveData = writeSave(currentUser, save);
 }
@@ -400,7 +544,15 @@ function autosaveProgress() {
   saveProgress();
 }
 
-function handleKey(e) {
+async function handleKey(e) {
+  if (isLocationGuideOpen()) {
+    e.preventDefault();
+    if (e.code === "Escape" || e.code === "Enter") {
+      closeLocationGuide();
+    }
+    return;
+  }
+
   setKeyState(e, true);
   if (isMovementKey(e) || isRunKey(e)) {
     e.preventDefault();
@@ -445,6 +597,12 @@ function handleKey(e) {
     return;
   }
 
+  if (matchesKey(e, KEY_ALIASES.guide)) {
+    e.preventDefault();
+    openCurrentLocationGuide();
+    return;
+  }
+
   if (e.code === "Space") {
     e.preventDefault();
     if (!e.repeat) {
@@ -455,7 +613,7 @@ function handleKey(e) {
 
   if (matchesKey(e, KEY_ALIASES.interact)) {
     e.preventDefault();
-    if (!tryTalk()) {
+    if (!(await tryTalk())) {
       tryLocationExit();
     }
   }
@@ -668,7 +826,7 @@ function getAttackBox() {
   });
 }
 
-function tryTalk() {
+async function tryTalk() {
   const interactable = findNearestInteractable();
   if (!interactable) {
     return false;
@@ -680,6 +838,11 @@ function tryTalk() {
       return true;
     }
     startDialog(interactable.entity);
+    return true;
+  }
+
+  if (isRuneObject(interactable.entity)) {
+    await handleRuneInteraction(interactable.entity);
     return true;
   }
 
@@ -701,9 +864,13 @@ function isPortalObject(object) {
   return object?.type === "portal" || object?.actionType === "portal";
 }
 
+function isRuneObject(object) {
+  return object?.type === "rune";
+}
+
 function handlePortalInteraction(portal) {
   if (portal.locked) {
-    showNotification("Портал пока нестабилен.");
+    showNotification(portal.lockedMessage || "Портал пока нестабилен.");
     return;
   }
 
@@ -714,6 +881,77 @@ function handlePortalInteraction(portal) {
   }
 
   switchLocation(targetLocationId, portal.spawn);
+}
+
+async function handleRuneInteraction(rune) {
+  if (content.location.id !== ECHO_MAZE_LOCATION_ID) {
+    return;
+  }
+
+  if (echoMazeState.solved) {
+    showNotification("Руна уже светится.");
+    return;
+  }
+
+  if (echoMazeState.activatedRunes.includes(rune.orderKey)) {
+    showNotification("Эта руна уже откликнулась.");
+    return;
+  }
+
+  const expectedKey = echoMazeState.sequence[echoMazeState.progressIndex];
+  if (rune.orderKey === expectedKey) {
+    echoMazeState.activatedRunes.push(rune.orderKey);
+    echoMazeState.progressIndex += 1;
+    showNotification("Руна откликнулась.");
+
+    if (echoMazeState.progressIndex >= echoMazeState.sequence.length) {
+      await solveEchoMaze();
+    }
+  } else {
+    echoMazeState.progressIndex = 0;
+    echoMazeState.activatedRunes = [];
+    showNotification("Лабиринт исказился.");
+    damagePlayer(1);
+    if (playerStats.hp > 0) {
+      await spawnEchoShadowNearPlayer();
+    }
+  }
+
+  applyEchoMazeRuntimeState();
+  saveProgress();
+}
+
+async function solveEchoMaze() {
+  if (!echoMazeState.completedTimeMs) {
+    echoMazeState.completedTimeMs = Date.now() - (echoMazeState.runStartedAt || Date.now());
+    recordEchoMazeResult(echoMazeState.completedTimeMs);
+  }
+  echoMazeState.solved = true;
+  echoMazeState.exitPortalUnlocked = true;
+
+  if (!echoMazeState.rewardClaimed) {
+    addPlayerGold(playerStats, ECHO_MAZE_REWARD_GOLD);
+    const item = await getItemData("echo_shard");
+    addItemToInventory(inventory, item, 1);
+    updatePlayerStatsUi();
+    updateInventoryList();
+    echoMazeState.rewardClaimed = true;
+    showNotification("Эхо-лабиринт затих. Вы получили 25 золота и Осколок эха.");
+  }
+  updateEchoMazeTimerUi();
+  showRunResults(echoMazeResults);
+}
+
+async function spawnEchoShadowNearPlayer() {
+  const mobType = await loadJson("data/mobs/echo_shadow.json");
+  const spawn = findClosestOpenPoint(cat.x + ECHO_SHADOW_SPAWN_OFFSET, cat.y);
+  const shadow = await spawnMob({
+    ...mobType,
+    type: "echo_shadow",
+    position: spawn,
+  });
+  mobs.push(shadow);
+  gameState.mobs = mobs;
 }
 
 function tryLocationExit() {
@@ -872,7 +1110,26 @@ function updateQuestStatus(questId, status) {
 }
 
 function updateQuestList() {
-  renderQuestList(questsList, questLog);
+  const visibleQuestLog = questLog.map((quest) => ({
+    ...quest,
+    canAbandon: questStates[quest.id] !== "delivered",
+  }));
+  renderQuestList(questsList, visibleQuestLog, abandonQuest);
+}
+
+function abandonQuest(questId) {
+  const abandoned = abandonQuestState({
+    questId,
+    questStates,
+    questLog,
+  });
+  if (!abandoned) {
+    return;
+  }
+
+  updateQuestList();
+  showNotification("Квест покинут.");
+  saveProgress();
 }
 
 function addItem(itemId, quantity = 1) {
@@ -1081,6 +1338,17 @@ function findClosestRoad(startX, startY) {
   return best;
 }
 
+function findClosestOpenPoint(startX, startY) {
+  const tile = findClosestRoad(
+    Math.max(1, Math.floor(startX / TILE_SIZE)),
+    Math.max(1, Math.floor(startY / TILE_SIZE))
+  );
+  return {
+    x: tile.x * TILE_SIZE + TILE_SIZE / 2,
+    y: tile.y * TILE_SIZE + TILE_SIZE / 2,
+  };
+}
+
 function findLargestRoadCluster() {
   const visited = new Set();
   const clusters = [];
@@ -1164,12 +1432,45 @@ async function createObjects() {
     }
     try {
       object.image = await loadImage(withArtVersion(object.sprite));
+      object.baseImage = object.image;
+      if (object.activeSprite) {
+        object.activeImage = await loadImage(withArtVersion(object.activeSprite));
+      }
+      if (object.lockedSprite) {
+        object.lockedImage = await loadImage(withArtVersion(object.lockedSprite));
+      }
     } catch (error) {
       console.warn(`Failed to load object sprite: ${object.sprite}`, error);
     }
   }));
 
   return locationObjects;
+}
+
+function applyEchoMazeRuntimeState() {
+  if (content?.location?.id !== ECHO_MAZE_LOCATION_ID) {
+    return;
+  }
+
+  objects.forEach((object) => {
+    if (object.type === "rune") {
+      object.isActive = echoMazeState.solved || echoMazeState.activatedRunes.includes(object.orderKey);
+      if (object.isActive && object.activeImage) {
+        object.image = object.activeImage;
+      } else if (!object.isActive && object.baseImage) {
+        object.image = object.baseImage;
+      }
+    }
+
+    if (object.id === "portal_echo_maze_exit") {
+      object.locked = !echoMazeState.exitPortalUnlocked;
+      if (object.locked && object.lockedImage) {
+        object.image = object.lockedImage;
+      } else if (!object.locked && object.activeImage) {
+        object.image = object.activeImage;
+      }
+    }
+  });
 }
 
 async function createMobs() {
@@ -1251,6 +1552,8 @@ function update() {
   if (!cat || !currentUser) {
     return;
   }
+
+  updateEchoMazeTimerUi();
 
   if (inDialog) {
     return;
@@ -1389,12 +1692,14 @@ function getCurrentMoveVector() {
 function getControlLegendContext() {
   const interactable = !inDialog ? findNearestInteractable() : null;
   const nearbyPortal = interactable?.type === "object" && isPortalObject(interactable.entity);
+  const nearbyRune = interactable?.type === "object" && isRuneObject(interactable.entity);
   return {
     isGameActive: Boolean(currentUser && cat),
     isDialogOpen: inDialog,
     nearbyNPC: interactable?.type === "npc",
     nearbyPortal,
     nearbyLockedPortal: nearbyPortal && Boolean(interactable.entity.locked),
+    nearbyRune,
     nearbyInteractable: Boolean(interactable),
     nearbyExit: !inDialog && Boolean(findNearbyExit()),
     nearbyMob: !inDialog && mobs.some(isMobInAttackRange),

@@ -1,0 +1,31 @@
+{
+  "id": "portal_echo_maze_exit",
+  "name": "Выход из Эхо-лабиринта",
+  "type": "portal",
+  "position": {
+    "x": 768,
+    "y": 140
+  },
+  "marker": {
+    "x": 768,
+    "y": 76
+  },
+  "sprite": "assets/objects/portals/portal_echo_locked.png",
+  "lockedSprite": "assets/objects/portals/portal_echo_locked.png",
+  "activeSprite": "assets/objects/portals/portal_echo_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "lost_portal_valley",
+  "locked": true,
+  "lockedMessage": "Выходной портал закрыт. Руны молчат.",
+  "spawn": {
+    "x": 424,
+    "y": 350,
+    "direction": "down"
+  },
+  "description": "Выход откроется, когда руны прозвучат в правильном порядке."
+}

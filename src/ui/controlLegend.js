@@ -41,6 +41,7 @@ export function updateControlLegend(context = null) {
     "Shift — бег",
     "Q — квесты",
     "I — инвентарь",
+    "H — инфо локации",
     context.minimapEnabled ? "M — скрыть миникарту" : "M — показать миникарту",
   ];
 
@@ -53,6 +54,8 @@ export function updateControlLegend(context = null) {
   } else {
     if (context.nearbyNPC) {
       lines.push("E — говорить");
+    } else if (context.nearbyRune) {
+      lines.push("E — активировать руну");
     } else if (context.nearbyPortal) {
       lines.push(context.nearbyLockedPortal ? "E — осмотреть портал" : "E — войти в портал");
     } else if (context.nearbyExit) {

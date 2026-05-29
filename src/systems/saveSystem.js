@@ -15,7 +15,7 @@ export function readSavedProgress(username, storage = localStorage) {
   }
 }
 
-export function buildSaveData({ version, username, locationId, player, playerCharacter, playerStats, questStates, questLog, inventory }) {
+export function buildSaveData({ version, username, locationId, player, playerCharacter, playerStats, questStates, questLog, inventory, echoMazeState, echoMazeResults, seenLocationGuides }) {
   return {
     version,
     username,
@@ -30,6 +30,9 @@ export function buildSaveData({ version, username, locationId, player, playerCha
     questStates,
     questLog,
     inventory,
+    echoMazeState,
+    echoMazeResults,
+    seenLocationGuides,
     // TODO: при устойчивой системе mob-id сохранить индивидуальные dead/respawn состояния.
     savedAt: new Date().toISOString(),
   };

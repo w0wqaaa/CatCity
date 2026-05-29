@@ -1,0 +1,22 @@
+{
+  "id": "echo_shadow",
+  "name": "Эхо-тень",
+  "spriteBase": "assets/mobs/echo_shadow",
+  "spriteSheetName": "echo_shadow",
+  "idleFrameCount": 2,
+  "walkFrameCount": 4,
+  "attackFrameCount": 4,
+  "width": 52,
+  "height": 52,
+  "maxHp": 4,
+  "hp": 4,
+  "damage": 1,
+  "speed": 0.7,
+  "roamRadius": 120,
+  "aggroRadius": 120,
+  "attackRange": 28,
+  "attackCooldownMs": 1200,
+  "goldReward": 3,
+  "respawnTimeMs": 0,
+  "difficulty": 1
+}

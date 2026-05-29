@@ -1,0 +1,25 @@
+{
+  "id": "echo_maze",
+  "name": "Эхо-лабиринт",
+  "type": "puzzle-dungeon",
+  "map": "assets/maps/echo_maze/background.png",
+  "collisionMap": "src/maps/echoMazeCollisionMap.js",
+  "characters": [],
+  "quests": [],
+  "objects": [
+    "portal_echo_maze_entrance",
+    "portal_echo_maze_exit",
+    "echo_rune_leaf",
+    "echo_rune_stone",
+    "echo_rune_moon",
+    "echo_rune_flame"
+  ],
+  "items": ["echo_shard"],
+  "mobs": [],
+  "spawn": {
+    "x": 768,
+    "y": 832,
+    "direction": "up"
+  },
+  "exits": []
+}

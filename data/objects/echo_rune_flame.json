@@ -1,0 +1,17 @@
+{
+  "id": "echo_rune_flame",
+  "name": "Руна Пламени",
+  "type": "rune",
+  "orderKey": "flame",
+  "position": {
+    "x": 1120,
+    "y": 680
+  },
+  "sprite": "assets/objects/runes/rune_flame_inactive.png",
+  "activeSprite": "assets/objects/runes/rune_flame_active.png",
+  "width": 40,
+  "height": 40,
+  "collision": false,
+  "radius": 72,
+  "interactable": true
+}
