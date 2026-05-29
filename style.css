@@ -1006,3 +1006,197 @@ button {
   margin-top: 6px;
 }
 #snakeRetryBtn:hover { background: #254530; color: #ccffcc; }
+
+/* ═══════════════════════════════════════════
+   TUTORIAL GUIDE
+   ═══════════════════════════════════════════ */
+#tutorialOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 2, 16, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  backdrop-filter: blur(3px);
+}
+#tutorialOverlay.hidden { display: none; }
+
+#tutorialCard {
+  background: #0f0820;
+  border: 2px solid #8855dd;
+  border-radius: 16px;
+  padding: 28px 32px 22px;
+  width: 520px;
+  max-width: calc(100vw - 28px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 0 80px rgba(140, 70, 255, 0.35), inset 0 0 40px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+@keyframes tutSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tut-slide-in { animation: tutSlideIn 0.22s ease-out forwards; }
+
+#tutorialIcon {
+  font-size: 44px;
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+#tutorialTitle {
+  font-family: monospace;
+  font-size: 20px;
+  font-weight: bold;
+  color: #cc99ff;
+  text-align: center;
+  line-height: 1.3;
+}
+
+#tutorialText {
+  font-family: monospace;
+  font-size: 14px;
+  color: #c0b0e0;
+  line-height: 1.75;
+  text-align: center;
+}
+
+#tutorialHint {
+  font-family: monospace;
+  font-size: 12px;
+  color: #997755;
+  background: rgba(255, 200, 80, 0.07);
+  border: 1px solid rgba(200, 160, 60, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+#tutorialHint.hidden { display: none; }
+
+#tutorialKeys {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tut-key-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(60, 30, 100, 0.45);
+  border-radius: 7px;
+  padding: 7px 12px;
+}
+.tut-key {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: bold;
+  color: #ffdd55;
+  background: rgba(255, 220, 60, 0.12);
+  border: 1px solid rgba(255, 210, 60, 0.3);
+  border-radius: 5px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: center;
+}
+.tut-key-desc {
+  font-family: monospace;
+  font-size: 13px;
+  color: #b0a0cc;
+}
+
+/* Прогресс-точки */
+#tutorialDots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  padding: 4px 0 2px;
+}
+.tut-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(120, 70, 200, 0.35);
+  transition: background 0.2s, transform 0.2s;
+}
+.tut-dot-active {
+  background: #aa66ff;
+  transform: scale(1.3);
+}
+
+/* Навигация */
+#tutorialNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+#tutorialPrev, #tutorialNext {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#tutorialPrev {
+  background: rgba(60, 30, 100, 0.6);
+  color: #9977cc;
+  border: 1px solid rgba(100, 60, 180, 0.4);
+}
+#tutorialPrev:hover:not(:disabled) { background: rgba(80, 40, 140, 0.8); color: #cc99ff; }
+#tutorialPrev:disabled { opacity: 0.3; cursor: default; }
+#tutorialNext {
+  background: rgba(80, 40, 160, 0.8);
+  color: #cc99ff;
+  border: 1px solid #7744cc;
+}
+#tutorialNext:hover { background: rgba(110, 60, 200, 0.9); color: #fff; }
+#tutorialPage {
+  font-family: monospace;
+  font-size: 12px;
+  color: #7755aa;
+}
+
+/* Кнопка закрыть */
+#tutorialClose {
+  font-family: monospace;
+  font-size: 12px;
+  color: #664466;
+  background: none;
+  border: 1px solid rgba(100, 50, 80, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  align-self: center;
+  transition: color 0.15s, border-color 0.15s;
+  margin-top: 2px;
+}
+#tutorialClose:hover { color: #ff8899; border-color: rgba(180, 60, 80, 0.5); }
+
+/* Кнопка «Обучение» в UI */
+#tutorialButton {
+  background: rgba(60, 30, 100, 0.7);
+  color: #cc99ff;
+  border: 1px solid rgba(100, 60, 180, 0.5);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-family: monospace;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#tutorialButton:hover { background: rgba(90, 50, 150, 0.9); color: #eeddff; }

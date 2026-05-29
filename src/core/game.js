@@ -22,6 +22,7 @@ import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSav
 import { createShopPurchase } from "../systems/shopSystem.js";
 import { initPuzzleGame, isPuzzleOpen, openPuzzleGame, getPuzzleResults } from "../ui/puzzleGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
+import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -127,6 +128,7 @@ const questsList = document.getElementById("questsList");
 const closeQuests = document.getElementById("closeQuests");
 const inventoryButton = document.getElementById("inventoryButton");
 const guideButton = document.getElementById("guideButton");
+const tutorialButton = document.getElementById("tutorialButton");
 const inventoryPanel = document.getElementById("inventoryPanel");
 const inventoryList = document.getElementById("inventoryList");
 const closeInventory = document.getElementById("closeInventory");
@@ -196,6 +198,7 @@ async function startGame() {
   initRunTimer();
   initPuzzleGame();
   initSnakeGame();
+  initTutorialGuide();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -245,6 +248,7 @@ function setupEventListeners() {
 
   inventoryButton.addEventListener("click", toggleInventoryPanel);
   guideButton.addEventListener("click", openCurrentLocationGuide);
+  tutorialButton.addEventListener("click", () => openTutorial());
 
   if (closeQuests) {
     closeQuests.addEventListener("click", () => {
@@ -320,6 +324,11 @@ async function login(username) {
 
   await switchLocation(currentLocationId, getSavedSpawn(), { skipSave: true });
   showNotification(`Добро пожаловать, ${username}`);
+
+  // Показываем туториал при первом входе
+  if (maybeShowTutorial(username)) {
+    markTutorialSeen(username);
+  }
 
   if (!loopStarted) {
     loopStarted = true;
@@ -1609,7 +1618,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog || isPuzzleOpen() || isSnakeOpen()) {
+  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTutorialOpen()) {
     return;
   }
 
