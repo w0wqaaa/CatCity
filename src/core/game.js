@@ -1806,6 +1806,7 @@ function draw() {
 
   drawExitMarkers();
   drawObjectMarkers();
+  drawPortalLabels();
   drawQuestTurnInMarkers();
   drawNpcNameLabels();
 
@@ -2041,6 +2042,57 @@ function canTurnInQuestToNpc(npc) {
     quests: content.quests,
     questStates,
     inventory,
+  });
+}
+
+const PORTAL_LABELS = {
+  puzzle:  "🪞 Пазл",
+  snake:   "🐍 Змейка",
+  tank:    "🎯 Танки",
+  tetris:  "🧩 Тетрис",
+};
+
+function drawPortalLabels() {
+  objects.forEach((object) => {
+    const label = PORTAL_LABELS[object.actionType];
+    if (!label) return;
+
+    const marker = object.marker || object.position;
+    const x = marker.x;
+    const y = marker.y - 58; // над ромбиком
+
+    ctx.save();
+    ctx.font = "bold 13px monospace";
+    ctx.textAlign = "center";
+
+    // Фон-pill (без roundRect — совместимость)
+    const tw = ctx.measureText(label).width;
+    const pw = tw + 10;
+    const ph = 16;
+    const px = x - pw / 2;
+    const py = y - ph + 3;
+    const r  = 4;
+
+    ctx.fillStyle = "rgba(14, 6, 32, 0.85)";
+    ctx.strokeStyle = "rgba(160, 100, 255, 0.75)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + r, py);
+    ctx.lineTo(px + pw - r, py);
+    ctx.arcTo(px + pw, py, px + pw, py + r, r);
+    ctx.lineTo(px + pw, py + ph - r);
+    ctx.arcTo(px + pw, py + ph, px + pw - r, py + ph, r);
+    ctx.lineTo(px + r, py + ph);
+    ctx.arcTo(px, py + ph, px, py + ph - r, r);
+    ctx.lineTo(px, py + r);
+    ctx.arcTo(px, py, px + r, py, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#ddc8ff";
+    ctx.fillText(label, x, y);
+    ctx.restore();
   });
 }
 
