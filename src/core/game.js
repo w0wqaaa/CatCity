@@ -338,6 +338,7 @@ async function login(username) {
 
   loginScreen.classList.add("hidden");
   ui.classList.remove("hidden");
+  hotbarEl.classList.remove("hidden");
   updatePlayerStatsUi();
   playerBadge.textContent = `Игрок: ${username}`;
   updateQuestList();
@@ -368,6 +369,7 @@ function logout() {
   dialogBox.classList.add("hidden");
   closeLocationGuide();
   ui.classList.add("hidden");
+  hotbarEl.classList.add("hidden");
   loginScreen.classList.remove("hidden");
   updateMinimap();
   updateControlLegend();
