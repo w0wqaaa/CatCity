@@ -26,6 +26,7 @@ import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/ta
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
 import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=minigames-3";
+import { initTouchControls, showTouchControls, hideTouchControls } from "../ui/touchControls.js?v=mobile-1";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -217,6 +218,7 @@ async function startGame() {
   initTetrisGame();
   initTutorialGuide();
   initMiniGameManager();
+  initTouchControls();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -342,6 +344,7 @@ async function login(username) {
   loginScreen.classList.add("hidden");
   ui.classList.remove("hidden");
   hotbarEl.classList.remove("hidden");
+  showTouchControls();
   updatePlayerStatsUi();
   playerBadge.textContent = `Игрок: ${username}`;
   updateQuestList();
@@ -373,6 +376,7 @@ function logout() {
   closeLocationGuide();
   ui.classList.add("hidden");
   hotbarEl.classList.add("hidden");
+  hideTouchControls();
   loginScreen.classList.remove("hidden");
   updateMinimap();
   updateControlLegend();

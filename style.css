@@ -11,6 +11,7 @@ canvas {
   image-rendering: pixelated;
   width: 100vw;
   height: 100vh;
+  object-fit: contain;   /* сохраняем пропорции, всё видно без искажений */
 }
 
 /* === Р’РµСЂС…РЅРµРµ РјРµРЅСЋ === */
@@ -1692,4 +1693,132 @@ button {
 #miniGameOverlay canvas {
   width: auto !important;
   height: auto !important;
+}
+
+/* ═══════════════════════════════════════════
+   TOUCH CONTROLS (mobile)
+   ═══════════════════════════════════════════ */
+#touchControls {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none; /* кликается только по кнопкам */
+}
+#touchControls.hidden { display: none; }
+
+/* D-pad слева снизу */
+#tcDpad {
+  position: absolute;
+  left: 18px;
+  bottom: 24px;
+  width: 168px;
+  height: 168px;
+}
+.tc-btn {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background: rgba(30, 18, 55, 0.62);
+  border: 2px solid rgba(150, 100, 230, 0.55);
+  color: #e0d0ff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.tc-btn.tc-active { background: rgba(120, 70, 210, 0.85); border-color: #cc99ff; }
+.tc-up    { left: 57px;  top: 0; }
+.tc-left  { left: 0;     top: 57px; }
+.tc-right { left: 114px; top: 57px; }
+.tc-down  { left: 57px;  top: 114px; }
+.tc-run   { left: 57px;  top: 57px; font-size: 22px;
+  background: rgba(60, 40, 20, 0.6); border-color: rgba(220, 170, 60, 0.5); }
+.tc-run.tc-active { background: rgba(200, 150, 40, 0.8); }
+
+/* Кнопки действий справа снизу */
+#tcActions {
+  position: absolute;
+  right: 22px;
+  bottom: 40px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+.tc-action {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  color: #fff;
+  font-family: monospace;
+  font-weight: bold;
+}
+.tc-attack {
+  background: rgba(120, 40, 40, 0.65);
+  border: 2px solid rgba(230, 90, 90, 0.6);
+}
+.tc-attack.tc-active { background: rgba(200, 60, 60, 0.85); }
+.tc-use {
+  width: 78px; height: 78px; font-size: 28px;
+  background: rgba(40, 90, 60, 0.65);
+  border: 2px solid rgba(90, 220, 150, 0.6);
+}
+.tc-use.tc-active { background: rgba(60, 170, 110, 0.85); }
+
+/* ── Адаптив для узких экранов ── */
+@media (max-width: 760px) {
+  #ui {
+    top: 6px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 4px;
+    box-sizing: border-box;
+  }
+  #ui button {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+  #playerBadge, #playerStats {
+    display: inline-block;
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+  /* Миникарта меньше */
+  #minimap { transform: scale(0.7); transform-origin: top right; }
+  /* Хотбар поднять над кнопками действий */
+  #hotbar { bottom: 120px; right: 10px; }
+  /* Панели на всю доступную ширину */
+  #questsPanel, #inventoryPanel, #equipmentPanel {
+    max-width: calc(100vw - 16px);
+  }
+  /* Легенда компактнее */
+  #controlLegend { font-size: 11px !important; bottom: 200px !important; }
+}
+
+/* Узкие телефоны портретно */
+@media (max-width: 480px) {
+  .tc-btn { width: 48px; height: 48px; font-size: 18px; }
+  #tcDpad { width: 150px; height: 150px; }
+  .tc-up { left: 51px; } .tc-down { left: 51px; top: 102px; }
+  .tc-left { top: 51px; } .tc-right { left: 102px; top: 51px; }
+  .tc-run { left: 51px; top: 51px; }
+  .tc-action { width: 58px; height: 58px; font-size: 22px; }
+  .tc-use { width: 66px; height: 66px; }
 }
