@@ -549,146 +549,229 @@ button {
   background: #100820;
   border: 2px solid #7744cc;
   border-radius: 14px;
-  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(120, 60, 255, 0.4);
+  /* Фиксированная ширина — предотвращает шатание */
+  width: 530px;
+  max-width: calc(100vw - 24px);
   display: flex;
   flex-direction: column;
-  gap: 0;
-  box-shadow: 0 0 60px rgba(120, 60, 255, 0.45), inset 0 0 30px rgba(0,0,0,0.6);
-  overflow: hidden;
-  max-width: 560px;
-  width: calc(100vw - 32px);
 }
 
-/* ── Top bar ── */
+/* ── Шапка ── */
 #puzzleTopBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(60, 20, 100, 0.6);
+  gap: 10px;
+  padding: 11px 14px;
+  background: rgba(55, 18, 95, 0.7);
   border-bottom: 1px solid rgba(120, 70, 200, 0.4);
-  gap: 12px;
+  /* Фиксированная высота — не прыгает */
+  height: 48px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 #puzzleTitle {
   font-family: monospace;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   color: #cc99ff;
   white-space: nowrap;
+  flex: 1;
 }
 
 #puzzleTimerBox {
   font-family: monospace;
-  font-size: 20px;
+  font-size: 19px;
   color: #ffdd55;
   font-weight: bold;
   letter-spacing: 2px;
-  flex: 1;
+  white-space: nowrap;
+  min-width: 110px;
   text-align: center;
 }
 
+#puzzleTopButtons {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#puzzleHowBtn {
+  background: rgba(80, 40, 140, 0.8);
+  color: #cc99ff;
+  border: 1px solid #7744cc;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+  line-height: 30px;
+  text-align: center;
+}
+#puzzleHowBtn:hover { background: rgba(120, 60, 200, 0.9); }
+
 #puzzleExitBtn {
-  background: #6b1c1c;
+  background: #5e1a1a;
   color: #ffaaaa;
-  border: 1px solid #aa3333;
+  border: 1px solid #993333;
   border-radius: 8px;
-  padding: 7px 16px;
+  padding: 5px 13px;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  height: 30px;
+}
+#puzzleExitBtn:hover { background: #992222; color: #fff; }
+
+/* ── Инструкция ── */
+#puzzleInstr {
+  background: rgba(14, 7, 30, 0.97);
+  border-bottom: 1px solid rgba(100, 60, 180, 0.4);
+  padding: 18px 20px;
+}
+#puzzleInstr.hidden { display: none; }
+
+#puzzleInstrContent {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.pz-instr-title {
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: bold;
+  color: #cc99ff;
+  margin-bottom: 12px;
+}
+
+.pz-instr-list {
+  font-family: monospace;
+  font-size: 13px;
+  color: #c0b0e0;
+  line-height: 1.9;
+  padding-left: 18px;
+  margin: 0 0 14px 0;
+}
+.pz-instr-list li b { color: #ffdd88; }
+
+#puzzleInstrClose {
+  background: #2a4a2a;
+  color: #88ff99;
+  border: 1px solid #447744;
+  border-radius: 8px;
+  padding: 8px 22px;
   font-family: monospace;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s;
+  display: block;
+  margin: 0 auto;
 }
-#puzzleExitBtn:hover {
-  background: #aa2222;
-  color: #fff;
-}
+#puzzleInstrClose:hover { background: #3a6a3a; }
 
-/* ── Body ── */
+/* ── Основная зона (доска + сайдбар) ── */
 #puzzleBoardWrap {
   display: flex;
   align-items: flex-start;
-  gap: 0;
-  padding: 16px;
+  padding: 14px;
+  gap: 14px;
+  /* Фиксированная высота = нет reflow */
+  height: 392px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 #puzzleBoard {
   display: block;
   cursor: pointer;
   image-rendering: pixelated;
-  border-radius: 6px;
-  border: 2px solid rgba(100, 60, 180, 0.6);
+  border-radius: 5px;
+  border: 2px solid rgba(90, 50, 170, 0.7);
   flex-shrink: 0;
-  /* scale down on small screens */
-  max-width: min(360px, calc(100vw - 160px));
-  max-height: min(360px, calc(100vw - 160px));
+  /* Фиксированный размер — CSS не масштабирует, клики точные */
   width: 360px;
   height: 360px;
 }
 
-/* ── Side panel ── */
+/* ── Сайдбар ── */
 #puzzleSide {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 0 0 0 14px;
-  min-width: 100px;
+  gap: 8px;
+  /* Фиксированная ширина — не даёт шататься */
+  width: 116px;
+  flex-shrink: 0;
 }
 
 .puzzle-side-label {
   font-family: monospace;
-  font-size: 11px;
-  color: #9977bb;
+  font-size: 10px;
+  color: #7755aa;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 #puzzleRef {
   display: block;
-  border: 1px solid rgba(120, 80, 200, 0.5);
+  border: 1px solid rgba(110, 70, 190, 0.5);
   border-radius: 4px;
   image-rendering: pixelated;
   width: 90px;
   height: 90px;
+  flex-shrink: 0;
 }
 
 #puzzleStatus {
   font-family: monospace;
   font-size: 11px;
-  color: #aabbff;
+  color: #99aadd;
   text-align: center;
   line-height: 1.5;
-  min-height: 32px;
-  padding: 0 4px;
+  /* Фиксированная высота — главная причина шатания */
+  width: 116px;
+  height: 44px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 #puzzleBest {
   font-family: monospace;
   font-size: 11px;
-  color: #8877aa;
+  color: #7766aa;
   text-align: left;
   line-height: 1.7;
-  width: 100%;
+  width: 116px;
 }
-#puzzleBest b { color: #bb99ff; display: block; margin-bottom: 2px; }
-.pz-row { display: block; color: #aa99cc; }
-.pz-no-results { color: #665577; font-style: italic; }
+#puzzleBest b    { color: #aa88ee; display: block; margin-bottom: 2px; }
+.pz-row          { display: block; color: #9988bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pz-no-results   { color: #554466; font-style: italic; }
 
 #puzzleRetryBtn {
-  background: #1a3a1a;
-  color: #88ff99;
-  border: 1px solid #336633;
+  background: #1a3320;
+  color: #77ee88;
+  border: 1px solid #336644;
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 7px 0;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.15s;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 2px;
 }
-#puzzleRetryBtn:hover { background: #2a5a2a; color: #ccffcc; }
+#puzzleRetryBtn:hover { background: #254530; color: #ccffcc; }

@@ -6,33 +6,34 @@
 
 const COLS = 3;
 const ROWS = 3;
-const TILE_COUNT = COLS * ROWS;           // 9 позиций
-const EMPTY = 0;                          // 0 = пустой слот
-const TILE_PX = 120;                      // размер одной плитки в px
-const BOARD_PX = TILE_PX * COLS;         // 360
+const TILE_COUNT = COLS * ROWS;
+const EMPTY = 0;
+const TILE_PX = 120;
+const BOARD_PX = TILE_PX * COLS; // 360
 
 const SPRITE_URL = "assets/npcs/merchant/merchant_idle.png";
 const SHUFFLE_MOVES = 120;
 
-// ─── DOM ─────────────────────────────────────────────────────────────────────
-let overlay     = null;
-let boardCanvas = null;
-let boardCtx    = null;
-let timerEl     = null;
-let statusEl    = null;
-let bestEl      = null;
-let refCanvas   = null;  // маленький превью оригинала
+// ─── DOM ──────────────────────────────────────────────────────────────────────
+let overlay      = null;
+let boardCanvas  = null;
+let boardCtx     = null;
+let timerEl      = null;
+let statusEl     = null;
+let bestEl       = null;
+let refCanvas    = null;
+let instrPanel   = null; // панель с инструкцией
 
-// ─── Состояние ───────────────────────────────────────────────────────────────
-let grid          = [];   // grid[i] = номер плитки (0 = пустая)
-let sourceImg     = null; // загруженный спрайт
-let offscreen     = null; // offscreen canvas с квадратным спрайтом
-let nextExpected  = null;
-let startTime     = null;
-let timerRAF      = null;
-let isOpen        = false;
-let puzzleResults = [];
-let currentPlayer = "";
+// ─── Состояние ────────────────────────────────────────────────────────────────
+let grid            = [];
+let sourceImg       = null;
+let offscreen       = null;
+let startTime       = null;
+let timerRAF        = null;
+let isOpen          = false;
+let instrShown      = false; // показана ли инструкция прямо сейчас
+let puzzleResults   = [];
+let currentPlayer   = "";
 let onCloseCallback = null;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
@@ -44,11 +45,33 @@ export function initPuzzleGame() {
   overlay.className = "hidden";
   overlay.innerHTML = `
     <div id="puzzlePanel">
+
+      <!-- Шапка -->
       <div id="puzzleTopBar">
         <span id="puzzleTitle">🪞 Зеркальный Пазл</span>
         <span id="puzzleTimerBox">⏱ <span id="puzzleTimerVal">00:00.0</span></span>
-        <button id="puzzleExitBtn" type="button">✕ Выйти</button>
+        <div id="puzzleTopButtons">
+          <button id="puzzleHowBtn"  type="button" title="Как играть">?</button>
+          <button id="puzzleExitBtn" type="button">✕ Выйти</button>
+        </div>
       </div>
+
+      <!-- Инструкция (скрыта по умолчанию) -->
+      <div id="puzzleInstr" class="hidden">
+        <div id="puzzleInstrContent">
+          <div class="pz-instr-title">🪞 Как играть</div>
+          <ul class="pz-instr-list">
+            <li>Пазл разбит на <b>8 плиток</b> и один <b>пустой слот</b>.</li>
+            <li>Кликай на плитку, которая стоит <b>рядом с пустым местом</b> — она туда сдвинется.</li>
+            <li>Цель: <b>восстановить оригинальную картинку</b> (смотри превью справа).</li>
+            <li>Таймер стартует с первого хода — старайся решить <b>быстрее</b>!</li>
+            <li>Нажми <b>✕ Выйти</b> чтобы выйти в любой момент.</li>
+          </ul>
+          <button id="puzzleInstrClose" type="button">Понял, играть!</button>
+        </div>
+      </div>
+
+      <!-- Основная зона -->
       <div id="puzzleBoardWrap">
         <canvas id="puzzleBoard" width="${BOARD_PX}" height="${BOARD_PX}"></canvas>
         <div id="puzzleSide">
@@ -58,6 +81,7 @@ export function initPuzzleGame() {
           <div id="puzzleBest"></div>
         </div>
       </div>
+
     </div>
   `;
   document.body.appendChild(overlay);
@@ -68,13 +92,16 @@ export function initPuzzleGame() {
   statusEl    = overlay.querySelector("#puzzleStatus");
   bestEl      = overlay.querySelector("#puzzleBest");
   refCanvas   = overlay.querySelector("#puzzleRef");
+  instrPanel  = overlay.querySelector("#puzzleInstr");
 
   overlay.querySelector("#puzzleExitBtn").addEventListener("click", closePuzzle);
+  overlay.querySelector("#puzzleHowBtn").addEventListener("click", showInstr);
+  overlay.querySelector("#puzzleInstrClose").addEventListener("click", hideInstr);
   boardCanvas.addEventListener("click", handleClick);
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
-export function isPuzzleOpen() { return isOpen; }
+export function isPuzzleOpen()  { return isOpen; }
 
 export function openPuzzleGame({ playerName = "Игрок", onClose = null, savedResults = [] } = {}) {
   initPuzzleGame();
@@ -91,15 +118,30 @@ export function openPuzzleGame({ playerName = "Игрок", onClose = null, save
     if (img) buildOffscreen(img);
     drawRef();
     drawBoard();
+    // Показываем инструкцию при первом открытии
+    showInstr();
   });
 }
 
 export function getPuzzleResults() { return [...puzzleResults]; }
 
+// ─── Инструкция ───────────────────────────────────────────────────────────────
+function showInstr() {
+  instrShown = true;
+  instrPanel.classList.remove("hidden");
+}
+
+function hideInstr() {
+  instrShown = false;
+  instrPanel.classList.add("hidden");
+}
+
 // ─── Core ─────────────────────────────────────────────────────────────────────
 function closePuzzle() {
   stopTimer();
   isOpen = false;
+  instrShown = false;
+  instrPanel.classList.add("hidden");
   overlay.classList.add("hidden");
   if (onCloseCallback) onCloseCallback();
 }
@@ -108,12 +150,11 @@ function resetPuzzle() {
   stopTimer();
   startTime = null;
   timerEl.textContent = "00:00.0";
-  statusEl.textContent = "Двигай плитки рядом с пустым слотом";
+  setStatus("Двигай плитки рядом с пустым слотом");
   grid = buildSolvedGrid();
   shuffleGrid();
 }
 
-/** Решённое состояние: [1,2,3,4,5,6,7,8,0] — 0 в правом нижнем углу */
 function buildSolvedGrid() {
   const g = [];
   for (let i = 0; i < TILE_COUNT - 1; i++) g.push(i + 1);
@@ -129,19 +170,18 @@ function shuffleGrid() {
     [grid[emptyIdx], grid[pick]] = [grid[pick], grid[emptyIdx]];
     emptyIdx = pick;
   }
-  // Убеждаемся что не перемешали в решённое состояние
   if (isSolved()) shuffleGrid();
 }
 
 function getNeighborIndices(idx) {
   const row = Math.floor(idx / COLS);
   const col = idx % COLS;
-  const result = [];
-  if (row > 0)        result.push(idx - COLS);
-  if (row < ROWS - 1) result.push(idx + COLS);
-  if (col > 0)        result.push(idx - 1);
-  if (col < COLS - 1) result.push(idx + 1);
-  return result;
+  const r = [];
+  if (row > 0)        r.push(idx - COLS);
+  if (row < ROWS - 1) r.push(idx + COLS);
+  if (col > 0)        r.push(idx - 1);
+  if (col < COLS - 1) r.push(idx + 1);
+  return r;
 }
 
 function isSolved() {
@@ -151,35 +191,48 @@ function isSolved() {
   return grid[TILE_COUNT - 1] === EMPTY;
 }
 
+// ─── Статус (без изменения размера) ──────────────────────────────────────────
+let statusTimer = null;
+function setStatus(text, temporary = false) {
+  statusEl.textContent = text;
+  if (statusTimer) { clearTimeout(statusTimer); statusTimer = null; }
+  if (temporary) {
+    statusTimer = setTimeout(() => {
+      statusEl.textContent = "Двигай плитки рядом с пустым слотом";
+    }, 1500);
+  }
+}
+
 // ─── Input ────────────────────────────────────────────────────────────────────
 function handleClick(e) {
-  if (!isOpen) return;
-  const rect  = boardCanvas.getBoundingClientRect();
-  const scaleX = BOARD_PX / rect.width;
-  const scaleY = BOARD_PX / rect.height;
-  const mx    = (e.clientX - rect.left) * scaleX;
-  const my    = (e.clientY - rect.top)  * scaleY;
-  const col   = Math.floor(mx / TILE_PX);
-  const row   = Math.floor(my / TILE_PX);
+  if (!isOpen || instrShown) return;
+
+  // Берём координаты ДО возможного reflow — через e.offsetX/offsetY
+  // которые уже относительно canvas и не зависят от положения панели
+  const scaleX = BOARD_PX / boardCanvas.offsetWidth;
+  const scaleY = BOARD_PX / boardCanvas.offsetHeight;
+  const mx = e.offsetX * scaleX;
+  const my = e.offsetY * scaleY;
+
+  const col = Math.floor(mx / TILE_PX);
+  const row = Math.floor(my / TILE_PX);
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+
   const clickedIdx = row * COLS + col;
   const emptyIdx   = grid.indexOf(EMPTY);
 
   if (!getNeighborIndices(emptyIdx).includes(clickedIdx)) {
-    // Плитка не рядом с пустым слотом
-    statusEl.textContent = "Можно двигать только плитки рядом с пустым местом";
+    setStatus("❌ Эту плитку нельзя двигать — она не рядом с пустым местом", true);
     return;
   }
 
-  // Начинаем таймер при первом ходе
   if (!startTime) {
     startTime = Date.now();
     startTimer();
   }
 
-  // Меняем местами
   [grid[emptyIdx], grid[clickedIdx]] = [grid[clickedIdx], grid[emptyIdx]];
-  statusEl.textContent = "";
+  setStatus(""); // очищаем без временного сброса
   drawBoard();
 
   if (isSolved()) finish();
@@ -196,17 +249,11 @@ async function loadSprite() {
   });
 }
 
-/**
- * Рисуем спрайт в offscreen-квадрат BOARD_PX×BOARD_PX.
- * Берём центральную квадратную область источника.
- */
 function buildOffscreen(img) {
   offscreen = document.createElement("canvas");
   offscreen.width  = BOARD_PX;
   offscreen.height = BOARD_PX;
   const oc = offscreen.getContext("2d");
-
-  // Центрируем по короткой стороне
   const side = Math.min(img.width, img.height);
   const sx   = Math.floor((img.width  - side) / 2);
   const sy   = Math.floor((img.height - side) / 2);
@@ -219,19 +266,25 @@ function drawRef() {
   rc.clearRect(0, 0, 90, 90);
   if (offscreen) {
     rc.drawImage(offscreen, 0, 0, 90, 90);
+    // Лёгкая сетка на превью
+    rc.strokeStyle = "rgba(120,80,200,0.4)";
+    rc.lineWidth = 0.5;
+    for (let i = 1; i < COLS; i++) {
+      const x = i * 30;
+      rc.beginPath(); rc.moveTo(x, 0); rc.lineTo(x, 90); rc.stroke();
+    }
+    for (let i = 1; i < ROWS; i++) {
+      const y = i * 30;
+      rc.beginPath(); rc.moveTo(0, y); rc.lineTo(90, y); rc.stroke();
+    }
   } else {
-    rc.fillStyle = "#333";
+    rc.fillStyle = "#1a0f3a";
     rc.fillRect(0, 0, 90, 90);
-    rc.fillStyle = "#888";
-    rc.font = "11px monospace";
-    rc.fillText("...", 32, 50);
   }
 }
 
 function drawBoard() {
   boardCtx.clearRect(0, 0, BOARD_PX, BOARD_PX);
-
-  // Тёмный фон
   boardCtx.fillStyle = "#0d0820";
   boardCtx.fillRect(0, 0, BOARD_PX, BOARD_PX);
 
@@ -243,22 +296,19 @@ function drawBoard() {
     const dy = drawRow * TILE_PX;
 
     if (tileNum === EMPTY) {
-      // Пустой слот
-      boardCtx.fillStyle = "#1a0f3a";
+      boardCtx.fillStyle = "#130a28";
       boardCtx.fillRect(dx + 1, dy + 1, TILE_PX - 2, TILE_PX - 2);
-      // Пунктирная граница
-      boardCtx.strokeStyle = "rgba(120,80,200,0.3)";
+      boardCtx.strokeStyle = "rgba(100,60,180,0.25)";
       boardCtx.lineWidth = 1;
       boardCtx.setLineDash([6, 4]);
-      boardCtx.strokeRect(dx + 2, dy + 2, TILE_PX - 4, TILE_PX - 4);
+      boardCtx.strokeRect(dx + 3, dy + 3, TILE_PX - 6, TILE_PX - 6);
       boardCtx.setLineDash([]);
       continue;
     }
 
-    // Какой фрагмент изображения показывает эта плитка
-    const srcNum  = tileNum - 1; // 0-based
-    const srcCol  = srcNum % COLS;
-    const srcRow  = Math.floor(srcNum / COLS);
+    const srcNum = tileNum - 1;
+    const srcCol = srcNum % COLS;
+    const srcRow = Math.floor(srcNum / COLS);
 
     if (offscreen) {
       boardCtx.drawImage(
@@ -271,21 +321,16 @@ function drawBoard() {
       boardCtx.fillRect(dx, dy, TILE_PX, TILE_PX);
     }
 
-    // Граница плитки
-    boardCtx.strokeStyle = "rgba(180,130,255,0.55)";
+    // Рамка плитки
+    boardCtx.strokeStyle = "rgba(160,110,255,0.5)";
     boardCtx.lineWidth = 1.5;
+    boardCtx.setLineDash([]);
     boardCtx.strokeRect(dx + 0.75, dy + 0.75, TILE_PX - 1.5, TILE_PX - 1.5);
-
-    // Маленький номер (помогает при отладке, можно убрать)
-    // boardCtx.fillStyle = "rgba(255,255,255,0.25)";
-    // boardCtx.font = "11px monospace";
-    // boardCtx.fillText(tileNum, dx + 4, dy + 14);
   }
 
   // Линии сетки поверх
-  boardCtx.strokeStyle = "rgba(100,60,180,0.7)";
+  boardCtx.strokeStyle = "rgba(80,45,160,0.8)";
   boardCtx.lineWidth = 2;
-  boardCtx.setLineDash([]);
   for (let c = 1; c < COLS; c++) {
     boardCtx.beginPath();
     boardCtx.moveTo(c * TILE_PX, 0);
@@ -324,35 +369,34 @@ function finish() {
   puzzleResults.sort((a, b) => a.timeMs - b.timeMs);
   puzzleResults = puzzleResults.slice(0, 10);
 
-  // Рисуем цельную картинку поверх доски
+  // Целая картинка поверх доски
   boardCtx.clearRect(0, 0, BOARD_PX, BOARD_PX);
   if (offscreen) boardCtx.drawImage(offscreen, 0, 0);
 
-  // Зелёная рамка победы
+  // Зелёная рамка
   boardCtx.strokeStyle = "#44ff88";
-  boardCtx.lineWidth = 5;
+  boardCtx.lineWidth = 6;
   boardCtx.strokeRect(3, 3, BOARD_PX - 6, BOARD_PX - 6);
 
-  // Надпись поверх
-  boardCtx.fillStyle = "rgba(0,0,0,0.55)";
-  boardCtx.fillRect(0, BOARD_PX / 2 - 36, BOARD_PX, 72);
+  // Полупрозрачная полоса с текстом
+  boardCtx.fillStyle = "rgba(0,0,0,0.6)";
+  boardCtx.fillRect(0, BOARD_PX / 2 - 40, BOARD_PX, 80);
   boardCtx.fillStyle = "#ffdd55";
-  boardCtx.font = "bold 28px monospace";
+  boardCtx.font = "bold 30px monospace";
   boardCtx.textAlign = "center";
-  boardCtx.fillText("✨ Собрано!", BOARD_PX / 2, BOARD_PX / 2 - 4);
-  boardCtx.font = "18px monospace";
+  boardCtx.fillText("✨ Собрано!", BOARD_PX / 2, BOARD_PX / 2 - 6);
+  boardCtx.font = "19px monospace";
   boardCtx.fillStyle = "#aaffcc";
   boardCtx.fillText(formatTime(timeMs), BOARD_PX / 2, BOARD_PX / 2 + 28);
   boardCtx.textAlign = "left";
 
-  statusEl.textContent = `🎉 Пазл решён за ${formatTime(timeMs)}!`;
+  setStatus(`🎉 Пазл решён за ${formatTime(timeMs)}!`);
   renderBest();
 
-  // Кнопка «Ещё раз»
   const old = overlay.querySelector("#puzzleRetryBtn");
   if (old) old.remove();
   const btn = document.createElement("button");
-  btn.id = "puzzleRetryBtn";
+  btn.id   = "puzzleRetryBtn";
   btn.type = "button";
   btn.textContent = "🔄 Ещё раз";
   btn.addEventListener("click", () => {
