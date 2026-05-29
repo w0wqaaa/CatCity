@@ -1851,3 +1851,112 @@ button {
 }
 .mg-rules-list li { margin: 2px 0; }
 .mg-rules-list b { color: #ffdd88; }
+
+/* ═══════════════════════════════════════════
+   POKER (Texas Hold'em hot-seat)
+   ═══════════════════════════════════════════ */
+#pokerRoot { width: 380px; max-width: calc(100vw - 40px); font-family: monospace; }
+
+/* Карты */
+.pk-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px; height: 66px;
+  border-radius: 6px;
+  background: #f5f0ff;
+  border: 1px solid #7744cc;
+  color: #221144;
+  margin: 0 3px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+.pk-card.pk-red { color: #cc2244; }
+.pk-card-r { font-size: 16px; font-weight: bold; line-height: 1; }
+.pk-card-s { font-size: 18px; line-height: 1; }
+.pk-card-back {
+  background: repeating-linear-gradient(45deg,#2a1060,#2a1060 4px,#3a1a7a 4px,#3a1a7a 8px);
+  border-color: #5533aa;
+}
+.pk-card-empty {
+  background: rgba(40,25,80,0.3);
+  border: 1px dashed rgba(120,80,200,0.4);
+}
+
+/* Стол */
+.pk-table { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pk-opp, .pk-me {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #c0b0e0;
+}
+.pk-name { font-weight: bold; color: #cc99ff; }
+.pk-chips { color: #ffdd55; }
+.pk-bet { color: #88ddaa; font-size: 12px; }
+.pk-tag {
+  background: rgba(200,60,60,0.7); color: #fff; font-size: 10px;
+  padding: 1px 6px; border-radius: 4px; font-weight: bold;
+}
+.pk-tag.pk-fold { background: rgba(90,90,90,0.7); }
+.pk-cards { display: flex; justify-content: center; }
+
+.pk-board {
+  width: 100%;
+  background: rgba(20,40,30,0.5);
+  border: 1px solid rgba(80,160,110,0.3);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  margin: 4px 0;
+}
+.pk-pot { font-size: 13px; color: #ffdd55; margin-bottom: 8px; }
+.pk-stage { color: #88ccff; }
+.pk-community { display: flex; justify-content: center; }
+
+/* Действия */
+.pk-actions {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  margin-top: 6px; width: 100%;
+}
+.pk-btn {
+  border: none; border-radius: 7px; padding: 9px 14px;
+  font-family: monospace; font-size: 13px; font-weight: bold;
+  cursor: pointer; color: #fff;
+}
+.pk-btn-fold  { background: #6b2020; }
+.pk-btn-check { background: #2a5a6a; }
+.pk-btn-call  { background: #2a6a40; }
+.pk-btn-raise { background: #6a4aaa; }
+.pk-btn-allin { background: #aa6020; }
+.pk-btn:hover { filter: brightness(1.25); }
+
+.pk-raise-box {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; justify-content: center; margin-top: 4px;
+}
+.pk-raise-slider { flex: 1; max-width: 140px; accent-color: #8855dd; }
+.pk-raise-val { color: #ffdd55; font-weight: bold; min-width: 28px; text-align: center; }
+
+.pk-hide {
+  margin-top: 8px; background: none; border: 1px solid rgba(120,80,200,0.4);
+  color: #9988bb; border-radius: 6px; padding: 5px 10px;
+  font-family: monospace; font-size: 11px; cursor: pointer;
+}
+.pk-hide:hover { color: #cc99ff; }
+
+/* Cover (передача устройства) */
+.pk-cover { text-align: center; padding: 20px 10px; width: 320px; max-width: calc(100vw - 50px); }
+.pk-cover-icon { font-size: 46px; margin-bottom: 10px; }
+.pk-cover-title { font-size: 18px; font-weight: bold; color: #cc99ff; margin-bottom: 10px; }
+.pk-cover-text { font-size: 13px; color: #b0a0d0; line-height: 1.7; margin-bottom: 16px; }
+
+/* Результат */
+.pk-result { text-align: center; width: 360px; max-width: calc(100vw - 40px); }
+.pk-result-title { font-size: 20px; font-weight: bold; color: #ffdd55; margin-bottom: 6px; }
+.pk-result-text { font-size: 13px; color: #b0a0d0; margin-bottom: 12px; line-height: 1.6; }
+.pk-showdown { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.pk-sd-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(30,18,55,0.5); border-radius: 8px; padding: 6px 10px;
+}
+.pk-cards-inline { display: flex; }

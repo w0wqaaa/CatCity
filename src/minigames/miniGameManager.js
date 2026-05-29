@@ -2,14 +2,16 @@
  * Mini-Game Manager
  * Central router for all mini-games via targetMode.
  */
-import { MINI_GAME_CONFIGS } from "./configs.js?v=rules-1";
+import { MINI_GAME_CONFIGS } from "./configs.js?v=poker-1";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
+import { createPoker }      from "./poker.js?v=poker-1";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
   tic_tac_toe: createTicTacToe,
   blackjack:   createBlackjack,
+  poker_lite:  createPoker,
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -101,6 +103,18 @@ function showModeSelect(config) {
          <ul class="mg-rules-list">${config.rules.map(r => `<li>${r}</li>`).join("")}</ul>
        </div>`
     : "";
+
+  if (config.pvpOnly) {
+    // Игра только для двух реальных игроков (например, покер)
+    bodyEl.innerHTML = `
+      <div class="mg-mode-select">
+        <div class="mg-mode-desc">${config.description}</div>
+        ${rulesHtml}
+        <button id="mgVsPvP" class="mg-btn mg-btn-big" type="button">👥 Играть (2 игрока)</button>
+      </div>`;
+    bodyEl.querySelector("#mgVsPvP").addEventListener("click", () => launchGame(config, "pvp"));
+    return;
+  }
 
   bodyEl.innerHTML = `
     <div class="mg-mode-select">
