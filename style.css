@@ -1822,3 +1822,32 @@ button {
   .tc-action { width: 58px; height: 58px; font-size: 22px; }
   .tc-use { width: 66px; height: 66px; }
 }
+
+/* Mini-game rules block (mode-select screen) */
+.mg-rules {
+  background: rgba(20, 10, 45, 0.6);
+  border: 1px solid rgba(120, 70, 200, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+.mg-rules-title {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: bold;
+  color: #cc99ff;
+  margin-bottom: 6px;
+}
+.mg-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #c0b0e0;
+  line-height: 1.65;
+}
+.mg-rules-list li { margin: 2px 0; }
+.mg-rules-list b { color: #ffdd88; }

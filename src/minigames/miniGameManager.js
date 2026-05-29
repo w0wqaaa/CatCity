@@ -2,7 +2,7 @@
  * Mini-Game Manager
  * Central router for all mini-games via targetMode.
  */
-import { MINI_GAME_CONFIGS } from "./configs.js";
+import { MINI_GAME_CONFIGS } from "./configs.js?v=rules-1";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
 
@@ -95,9 +95,17 @@ function showPlaceholder(config) {
 }
 
 function showModeSelect(config) {
+  const rulesHtml = Array.isArray(config.rules) && config.rules.length
+    ? `<div class="mg-rules">
+         <div class="mg-rules-title">📖 Как играть</div>
+         <ul class="mg-rules-list">${config.rules.map(r => `<li>${r}</li>`).join("")}</ul>
+       </div>`
+    : "";
+
   bodyEl.innerHTML = `
     <div class="mg-mode-select">
       <div class="mg-mode-desc">${config.description}</div>
+      ${rulesHtml}
       <button id="mgVsBot" class="mg-btn mg-btn-big" type="button">🤖 Против бота</button>
       <button id="mgVsPvP" class="mg-btn mg-btn-big ${config.supportsPvP ? "" : "mg-btn-disabled"}" type="button">
         👥 Два игрока${config.supportsPvP ? "" : " <small>(скоро)</small>"}
