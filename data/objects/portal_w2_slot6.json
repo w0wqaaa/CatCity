@@ -1,0 +1,17 @@
+{
+  "id": "portal_w2_slot6",
+  "name": "Портал 6",
+  "type": "portal",
+  "position": { "x": 1112, "y": 288 },
+  "marker": { "x": 1112, "y": 224 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "locked": true,
+  "lockedMessage": "Этот портал ещё не открыт.",
+  "description": "Скоро здесь появится новая игра."
+}

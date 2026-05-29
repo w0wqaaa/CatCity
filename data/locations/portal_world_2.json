@@ -1,0 +1,24 @@
+{
+  "id": "portal_world_2",
+  "name": "Долина порталов II",
+  "map": "assets/maps/lost_portal_valley/background.png",
+  "collisionMap": "src/maps/lostPortalValleyCollisionMap.js",
+  "characters": [],
+  "quests": [],
+  "objects": [
+    "portal_w2_back",
+    "portal_w2_slot1",
+    "portal_w2_slot2",
+    "portal_w2_slot3",
+    "portal_w2_slot4",
+    "portal_w2_slot5",
+    "portal_w2_slot6"
+  ],
+  "items": [],
+  "spawn": {
+    "x": 768,
+    "y": 850,
+    "direction": "up"
+  },
+  "exits": []
+}

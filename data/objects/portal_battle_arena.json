@@ -1,6 +1,6 @@
 {
   "id": "portal_battle_arena",
-  "name": "Арена разлома",
+  "name": "Долина порталов II",
   "type": "portal",
   "position": {
     "x": 1112,
@@ -10,14 +10,19 @@
     "x": 1112,
     "y": 224
   },
-  "sprite": "assets/objects/portals/portal_red_locked.png",
+  "sprite": "assets/objects/portals/portal_blue_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "targetLocationId": "battle_arena",
-  "locked": true,
-  "description": "Здесь позже будет боевой уровень."
+  "targetLocationId": "portal_world_2",
+  "locked": false,
+  "spawn": {
+    "x": 768,
+    "y": 850,
+    "direction": "up"
+  },
+  "description": "Портал ведёт в новую долину. Там ждут новые испытания."
 }

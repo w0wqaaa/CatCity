@@ -1,0 +1,18 @@
+{
+  "id": "portal_w2_back",
+  "name": "Вернуться в Долину I",
+  "type": "portal",
+  "position": { "x": 768, "y": 900 },
+  "marker": { "x": 768, "y": 836 },
+  "sprite": "assets/objects/portals/portal_green_active.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "lost_portal_valley",
+  "locked": false,
+  "spawn": { "x": 1112, "y": 340, "direction": "left" },
+  "description": "Портал возвращает в первую долину."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "portal_w2_slot5",
+  "name": "Портал 5",
+  "type": "portal",
+  "position": { "x": 768, "y": 760 },
+  "marker": { "x": 768, "y": 696 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "locked": true,
+  "lockedMessage": "Этот портал ещё не открыт.",
+  "description": "Скоро здесь появится новая игра."
+}

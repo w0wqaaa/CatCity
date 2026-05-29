@@ -2051,10 +2051,18 @@ const PORTAL_LABELS = {
   tank:    "🎯 Танки",
   tetris:  "🧩 Тетрис",
 };
+const PORTAL_ID_LABELS = {
+  portal_echo_maze:   "🔮 Эхо-лабиринт",
+  portal_battle_arena: "🌀 Долина II",
+};
+
+function getPortalLabel(object) {
+  return PORTAL_LABELS[object.actionType] || PORTAL_ID_LABELS[object.id] || null;
+}
 
 function drawPortalLabels() {
   objects.forEach((object) => {
-    const label = PORTAL_LABELS[object.actionType];
+    const label = getPortalLabel(object);
     if (!label) return;
 
     const marker = object.marker || object.position;
