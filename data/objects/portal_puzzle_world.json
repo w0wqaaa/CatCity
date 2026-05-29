@@ -1,6 +1,6 @@
 {
   "id": "portal_puzzle_world",
-  "name": "Мир головоломок",
+  "name": "Зеркальный Пазл",
   "type": "portal",
   "position": {
     "x": 424,
@@ -10,14 +10,13 @@
     "x": 424,
     "y": 648
   },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
   "radius": 105,
   "interactable": true,
-  "actionType": "portal",
-  "targetMode": "puzzle_world",
-  "locked": true,
-  "description": "Здесь позже будет мир головоломок."
+  "actionType": "puzzle",
+  "locked": false,
+  "description": "Осколки отражений торговца рассыпались! Собери их быстрее всех."
 }

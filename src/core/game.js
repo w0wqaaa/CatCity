@@ -20,6 +20,7 @@ import { drawObjects as drawSpriteObjects, drawPlayer as drawPlayerSprite } from
 import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from "../systems/respawnSystem.js";
 import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
 import { createShopPurchase } from "../systems/shopSystem.js";
+import { initPuzzleGame, isPuzzleOpen, openPuzzleGame, getPuzzleResults } from "../ui/puzzleGame.js";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -84,6 +85,7 @@ let inventory = {};
 let playerStats = { ...PLAYER_DEFAULT_STATS };
 let echoMazeState = createDefaultEchoMazeState();
 let echoMazeResults = [];
+let puzzleGameResults = [];
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -190,6 +192,7 @@ async function startGame() {
   initControlLegend();
   initLocationGuide();
   initRunTimer();
+  initPuzzleGame();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -846,6 +849,11 @@ async function tryTalk() {
     return true;
   }
 
+  if (isPuzzlePortal(interactable.entity)) {
+    handlePuzzlePortal(interactable.entity);
+    return true;
+  }
+
   if (isPortalObject(interactable.entity)) {
     handlePortalInteraction(interactable.entity);
     return true;
@@ -861,7 +869,26 @@ async function tryTalk() {
 }
 
 function isPortalObject(object) {
-  return object?.type === "portal" || object?.actionType === "portal";
+  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle";
+}
+
+function isPuzzlePortal(object) {
+  return object?.actionType === "puzzle";
+}
+
+function handlePuzzlePortal(portal) {
+  if (portal.locked) {
+    showNotification(portal.lockedMessage || "Портал заблокирован.");
+    return;
+  }
+  openPuzzleGame({
+    playerName: currentUser || "Игрок",
+    savedResults: puzzleGameResults,
+    onClose: () => {
+      puzzleGameResults = getPuzzleResults();
+      saveProgress();
+    },
+  });
 }
 
 function isRuneObject(object) {
@@ -1555,7 +1582,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog) {
+  if (inDialog || isPuzzleOpen()) {
     return;
   }
 
