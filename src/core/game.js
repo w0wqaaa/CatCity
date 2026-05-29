@@ -2052,8 +2052,11 @@ const PORTAL_LABELS = {
   tetris:  "🧩 Тетрис",
 };
 const PORTAL_ID_LABELS = {
-  portal_echo_maze:   "🔮 Эхо-лабиринт",
-  portal_battle_arena: "🌀 Долина II",
+  portal_echo_maze:          "🔮 Эхо-лабиринт",
+  portal_battle_arena:       "🌀 Долина II",
+  portal_back_to_city:       "🏙️ В город",
+  portal_w2_back:            "⬅️ Долина I",
+  portal_echo_maze_entrance: "🚪 Выйти",
 };
 
 function getPortalLabel(object) {

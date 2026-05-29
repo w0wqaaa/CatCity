@@ -1,6 +1,6 @@
 {
   "id": "portal_echo_maze_entrance",
-  "name": "Входной портал",
+  "name": "Выход из Эхо-лабиринта",
   "type": "portal",
   "position": {
     "x": 768,
@@ -15,6 +15,14 @@
   "height": 72,
   "collision": false,
   "radius": 90,
-  "interactable": false,
-  "description": "Портал, через который игрок вошел в лабиринт."
+  "interactable": true,
+  "actionType": "portal",
+  "targetLocationId": "lost_portal_valley",
+  "locked": false,
+  "spawn": {
+    "x": 768,
+    "y": 560,
+    "direction": "down"
+  },
+  "description": "Выход обратно в Долину порталов."
 }
