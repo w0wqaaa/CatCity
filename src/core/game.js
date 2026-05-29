@@ -21,6 +21,7 @@ import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from
 import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
 import { createShopPurchase } from "../systems/shopSystem.js";
 import { initPuzzleGame, isPuzzleOpen, openPuzzleGame, getPuzzleResults } from "../ui/puzzleGame.js";
+import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -86,6 +87,7 @@ let playerStats = { ...PLAYER_DEFAULT_STATS };
 let echoMazeState = createDefaultEchoMazeState();
 let echoMazeResults = [];
 let puzzleGameResults = [];
+let snakeGameResults  = [];
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -193,6 +195,7 @@ async function startGame() {
   initLocationGuide();
   initRunTimer();
   initPuzzleGame();
+  initSnakeGame();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -854,6 +857,11 @@ async function tryTalk() {
     return true;
   }
 
+  if (isSnakePortal(interactable.entity)) {
+    handleSnakePortal(interactable.entity);
+    return true;
+  }
+
   if (isPortalObject(interactable.entity)) {
     handlePortalInteraction(interactable.entity);
     return true;
@@ -869,7 +877,26 @@ async function tryTalk() {
 }
 
 function isPortalObject(object) {
-  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle";
+  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle" || object?.actionType === "snake";
+}
+
+function isSnakePortal(object) {
+  return object?.actionType === "snake";
+}
+
+function handleSnakePortal(portal) {
+  if (portal.locked) {
+    showNotification(portal.lockedMessage || "Портал заблокирован.");
+    return;
+  }
+  openSnakeGame({
+    playerName: currentUser || "Игрок",
+    savedResults: snakeGameResults,
+    onClose: () => {
+      snakeGameResults = getSnakeResults();
+      saveProgress();
+    },
+  });
 }
 
 function isPuzzlePortal(object) {
@@ -1582,7 +1609,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog || isPuzzleOpen()) {
+  if (inDialog || isPuzzleOpen() || isSnakeOpen()) {
     return;
   }
 
