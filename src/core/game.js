@@ -9,7 +9,7 @@ import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../
 import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=echo-maze-1";
 import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
 import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
-import { renderInventoryGrid, renderEquipmentPanel, renderInventoryList, renderPlayerStats, renderQuestList } from "../ui/uiManager.js?v=inv-grid-1";
+import { renderInventoryGrid, renderEquipmentPanel, renderHotbar, renderInventoryList, renderPlayerStats, renderQuestList, getItemIcon } from "../ui/uiManager.js?v=hotbar-1";
 import { attackFirstMob, canAttack, damagePlayer as applyPlayerDamage, getAttackBox as buildAttackBox, getMobBox, killMob, rectanglesOverlap, restorePlayerAfterDeath } from "../systems/combatSystem.js";
 import { getNpcDialogStage, openDialogState, advanceDialog } from "../systems/dialogSystem.js";
 import { addGold as addPlayerGold, addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats, removeItemFromInventory } from "../systems/inventorySystem.js";
@@ -94,6 +94,7 @@ let snakeGameResults  = [];
 let tankGameResults   = [];
 let tetrisGameResults = [];
 let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
+let hotbar = { 1: null, 2: null, 3: null }; // item IDs для быстрых слотов
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -143,6 +144,7 @@ const equipmentPanel    = document.getElementById("equipmentPanel");
 const equipmentButton   = document.getElementById("equipmentButton");
 const closeEquipmentBtn = document.getElementById("closeEquipment");
 const equipSlots        = document.getElementById("equipSlots");
+const hotbarEl          = document.getElementById("hotbar");
 const logoutButton = document.getElementById("logoutButton");
 const dialogBox = document.getElementById("dialogBox");
 const dialogText = document.getElementById("dialogText");
@@ -340,6 +342,7 @@ async function login(username) {
   playerBadge.textContent = `Игрок: ${username}`;
   updateQuestList();
   updateInventoryList();
+  updateHotbarUI();
 
   await switchLocation(currentLocationId, getSavedSpawn(), { skipSave: true });
   showNotification(`Добро пожаловать, ${username}`);
@@ -537,6 +540,7 @@ function loadProgress() {
   echoMazeResults = normalizeEchoMazeResults(save?.echoMazeResults);
   seenLocationGuides = normalizeSeenLocationGuides(save?.seenLocationGuides);
   equipment = save?.equipment || { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
+  hotbar    = save?.hotbar    || { 1: null, 2: null, 3: null };
   gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats, echoMazeState, echoMazeResults, seenLocationGuides });
   gameState.echoMazeState = echoMazeState;
   gameState.echoMazeResults = echoMazeResults;
@@ -564,6 +568,7 @@ function saveProgress() {
     questLog,
     inventory,
     equipment,
+    hotbar,
     echoMazeState,
     echoMazeResults,
     seenLocationGuides,
@@ -646,6 +651,11 @@ async function handleKey(e) {
     }
     return;
   }
+
+  // Быстрые слоты 1/2/3
+  if (e.code === "Digit1" || e.key === "1") { e.preventDefault(); useHotbarSlot(1); return; }
+  if (e.code === "Digit2" || e.key === "2") { e.preventDefault(); useHotbarSlot(2); return; }
+  if (e.code === "Digit3" || e.key === "3") { e.preventDefault(); useHotbarSlot(3); return; }
 
   if (matchesKey(e, KEY_ALIASES.interact)) {
     e.preventDefault();
@@ -1390,10 +1400,38 @@ function hasRequiredItems(items) {
 }
 
 function updateInventoryGrid() {
-  renderInventoryGrid(invGrid, invGoldDisplay, inventory, playerStats, { onUseItem: useItem });
+  renderInventoryGrid(invGrid, invGoldDisplay, inventory, playerStats, {
+    onUseItem: useItem,
+    onAssignItem: assignToHotbar,
+  });
+  updateHotbarUI();
 }
 // keep old name as alias:
 function updateInventoryList() { updateInventoryGrid(); }
+
+function assignToHotbar(itemId, slot) {
+  hotbar[slot] = itemId || null;
+  updateHotbarUI();
+  showNotification(`${getItemIcon(inventory[itemId])} назначено на [${slot}]`);
+  saveProgress();
+}
+
+function updateHotbarUI() {
+  renderHotbar(hotbarEl, hotbar, inventory);
+}
+
+function useHotbarSlot(slot) {
+  const itemId = hotbar[slot];
+  if (!itemId) { showNotification(`Слот ${slot} пуст`); return; }
+  if (!inventory[itemId]) {
+    // Предмет закончился — очищаем слот
+    hotbar[slot] = null;
+    updateHotbarUI();
+    showNotification(`Слот ${slot}: предмет закончился`);
+    return;
+  }
+  useItem(itemId);
+}
 
 function useItem(itemId) {
   const item = inventory[itemId];

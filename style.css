@@ -1512,3 +1512,98 @@ button {
   font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px;
 }
 #tetrisRetryBtn:hover { background: #254530; color: #ccffcc; }
+
+/* ═══════════════════════════════════════════
+   HOTBAR — быстрые слоты 1/2/3
+   ═══════════════════════════════════════════ */
+#hotbar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 50;
+}
+
+.hb-slot {
+  width: 58px;
+  height: 58px;
+  background: rgba(14, 7, 32, 0.88);
+  border: 2px solid rgba(90, 50, 160, 0.6);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.hb-slot.hb-filled {
+  border-color: rgba(150, 90, 255, 0.85);
+  box-shadow: 0 0 8px rgba(120, 60, 220, 0.35);
+}
+
+.hb-key {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: bold;
+  color: #9977cc;
+  line-height: 1;
+}
+.hb-slot.hb-filled .hb-key { color: #cc99ff; }
+
+.hb-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.hb-qty {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #ffdd55;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Кнопки назначения [1][2][3] в инвентаре */
+.inv-assign-row {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 2px;
+  background: rgba(10, 5, 25, 0.92);
+  border-radius: 4px;
+  padding: 2px;
+  z-index: 10;
+}
+.inv-slot:hover .inv-assign-row { display: flex; }
+
+.inv-assign-btn {
+  background: rgba(60, 30, 100, 0.9);
+  color: #cc99ff;
+  border: 1px solid rgba(100, 60, 180, 0.6);
+  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  line-height: 16px;
+  text-align: center;
+  transition: background 0.1s;
+}
+.inv-assign-btn:hover {
+  background: rgba(100, 60, 180, 0.95);
+  color: #fff;
+}

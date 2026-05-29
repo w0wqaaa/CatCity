@@ -15,7 +15,7 @@ export function readSavedProgress(username, storage = localStorage) {
   }
 }
 
-export function buildSaveData({ version, username, locationId, player, playerCharacter, playerStats, questStates, questLog, inventory, equipment, echoMazeState, echoMazeResults, seenLocationGuides }) {
+export function buildSaveData({ version, username, locationId, player, playerCharacter, playerStats, questStates, questLog, inventory, equipment, hotbar, echoMazeState, echoMazeResults, seenLocationGuides }) {
   return {
     version,
     username,
@@ -31,6 +31,7 @@ export function buildSaveData({ version, username, locationId, player, playerCha
     questLog,
     inventory,
     equipment: equipment || {},
+    hotbar: hotbar || { 1: null, 2: null, 3: null },
     echoMazeState,
     echoMazeResults,
     seenLocationGuides,
