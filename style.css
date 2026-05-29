@@ -1606,3 +1606,90 @@ button {
   background: rgba(100, 60, 180, 0.95);
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════
+   MINI-GAME MANAGER (tic-tac-toe, blackjack, placeholders)
+   ═══════════════════════════════════════════ */
+#miniGameOverlay {
+  position: fixed; inset: 0;
+  background: rgba(4, 2, 14, 0.9);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+}
+#miniGameOverlay.hidden { display: none; }
+
+#mgPanel {
+  background: #100820; border: 2px solid #7744cc; border-radius: 14px;
+  overflow: hidden; box-shadow: 0 0 60px rgba(120,60,255,0.4);
+  min-width: 360px; max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+#mgTopBar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 11px 14px;
+  background: rgba(55,18,95,0.7); border-bottom: 1px solid rgba(120,70,200,0.4);
+}
+#mgTitle { font-family: monospace; font-size: 16px; font-weight: bold; color: #cc99ff; }
+#mgExitBtn {
+  background: #5e1a1a; color: #ffaaaa; border: 1px solid #993333;
+  border-radius: 8px; padding: 5px 13px; font-family: monospace;
+  font-size: 13px; font-weight: bold; cursor: pointer;
+}
+#mgExitBtn:hover { background: #992222; color: #fff; }
+#mgBody { padding: 18px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#mgMsg {
+  font-family: monospace; font-size: 14px; color: #ffdd55;
+  text-align: center; min-height: 20px; padding: 0 14px 12px;
+}
+
+/* Кнопки */
+.mg-btn {
+  background: rgba(80,40,160,0.85); color: #cc99ff; border: 1px solid #7744cc;
+  border-radius: 8px; padding: 9px 20px; font-family: monospace;
+  font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.15s;
+}
+.mg-btn:hover { background: rgba(110,60,200,0.95); color: #fff; }
+.mg-btn-big { width: 100%; padding: 14px; font-size: 15px; }
+.mg-btn-disabled { opacity: 0.5; }
+.mg-btn-small {
+  background: rgba(80,40,140,0.8); color: #cc99ff; border: 1px solid #7744cc;
+  border-radius: 5px; width: 26px; height: 26px; font-family: monospace;
+  font-size: 16px; font-weight: bold; cursor: pointer;
+}
+.mg-btn-small:hover { background: rgba(120,60,200,0.9); }
+
+/* Меню выбора режима */
+.mg-mode-select { display: flex; flex-direction: column; gap: 10px; width: 280px; }
+.mg-mode-desc {
+  font-family: monospace; font-size: 12px; color: #b0a0d0;
+  text-align: center; line-height: 1.6; margin-bottom: 6px;
+}
+.mg-mode-select small { color: #8877aa; font-size: 10px; }
+
+/* Placeholder */
+.mg-placeholder { text-align: center; padding: 20px; max-width: 320px; }
+.mg-placeholder-icon { font-size: 48px; margin-bottom: 10px; }
+.mg-placeholder-title { font-family: monospace; font-size: 18px; font-weight: bold; color: #cc99ff; margin-bottom: 10px; }
+.mg-placeholder-text { font-family: monospace; font-size: 13px; color: #9988bb; line-height: 1.7; }
+
+/* Общий статус игры */
+.mg-status {
+  font-family: monospace; font-size: 14px; color: #ddc8ff;
+  text-align: center; min-height: 20px; font-weight: bold;
+}
+.mg-game-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* Blackjack */
+.bj-label { font-family: monospace; font-size: 12px; color: #9988cc; align-self: flex-start; }
+.bj-canvas { display: block; }
+.bj-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 6px; }
+.bj-bet-row { display: flex; align-items: center; gap: 8px; }
+.bj-bet-label { font-family: monospace; font-size: 13px; color: #b0a0d0; }
+.bj-bet-val { font-family: monospace; font-size: 18px; font-weight: bold; color: #ffdd55; min-width: 24px; text-align: center; }
+
+/* Override global canvas sizing inside mini-game overlay */
+#miniGameOverlay canvas {
+  width: auto !important;
+  height: auto !important;
+}

@@ -1,6 +1,6 @@
 {
   "id": "portal_w2_slot4",
-  "name": "Портал 4",
+  "name": "Измерение стратегий",
   "type": "portal",
   "position": { "x": 1112, "y": 712 },
   "marker": { "x": 1112, "y": 648 },
@@ -11,7 +11,7 @@
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "locked": true,
-  "lockedMessage": "Этот портал ещё не открыт.",
-  "description": "Скоро здесь появится новая игра."
+  "targetMode": "chess",
+  "locked": false,
+  "description": "Шахматы. Скоро."
 }

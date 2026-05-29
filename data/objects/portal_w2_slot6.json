@@ -1,6 +1,6 @@
 {
   "id": "portal_w2_slot6",
-  "name": "Портал 6",
+  "name": "Кибер-измерение",
   "type": "portal",
   "position": { "x": 1112, "y": 288 },
   "marker": { "x": 1112, "y": 224 },
@@ -11,7 +11,7 @@
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "locked": true,
-  "lockedMessage": "Этот портал ещё не открыт.",
-  "description": "Скоро здесь появится новая игра."
+  "targetMode": "tron_duel",
+  "locked": false,
+  "description": "Tron Duel. Скоро."
 }

@@ -6,7 +6,7 @@ import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
 import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
 import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=echo-maze-1";
-import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=echo-maze-1";
+import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=minigames-1";
 import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
 import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
 import { renderInventoryGrid, renderEquipmentPanel, renderHotbar, renderInventoryList, renderPlayerStats, renderQuestList, getItemIcon } from "../ui/uiManager.js?v=hotbar-1";
@@ -25,6 +25,7 @@ import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
+import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=minigames-1";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {
@@ -95,6 +96,7 @@ let tankGameResults   = [];
 let tetrisGameResults = [];
 let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
 let hotbar = { 1: null, 2: null, 3: null }; // item IDs для быстрых слотов
+let miniGameStats = {};
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -214,6 +216,7 @@ async function startGame() {
   initTankGame();
   initTetrisGame();
   initTutorialGuide();
+  initMiniGameManager();
   initShopUi();
   setupEventListeners();
   initLogin();
@@ -543,6 +546,7 @@ function loadProgress() {
   seenLocationGuides = normalizeSeenLocationGuides(save?.seenLocationGuides);
   equipment = save?.equipment || { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
   hotbar    = save?.hotbar    || { 1: null, 2: null, 3: null };
+  miniGameStats = save?.miniGameStats || {};
   gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats, echoMazeState, echoMazeResults, seenLocationGuides });
   gameState.echoMazeState = echoMazeState;
   gameState.echoMazeResults = echoMazeResults;
@@ -571,6 +575,7 @@ function saveProgress() {
     inventory,
     equipment,
     hotbar,
+    miniGameStats,
     echoMazeState,
     echoMazeResults,
     seenLocationGuides,
@@ -588,6 +593,12 @@ function autosaveProgress() {
 }
 
 async function handleKey(e) {
+  // Пока мини-игра открыта — основное управление заблокировано
+  // (Esc обрабатывается внутри miniGameManager)
+  if (isMiniGameOpen()) {
+    return;
+  }
+
   if (isLocationGuideOpen()) {
     e.preventDefault();
     if (e.code === "Escape" || e.code === "Enter") {
@@ -1018,6 +1029,24 @@ function handlePortalInteraction(portal) {
     return;
   }
 
+  // Мини-игра через targetMode
+  if (portal.targetMode) {
+    openMiniGame(portal.targetMode, {
+      playerStats,
+      onGoldChange: (delta) => {
+        addPlayerGold(playerStats, delta);
+        updatePlayerStatsUi();
+        saveProgress();
+      },
+      onStatsUpdate: (modeId, result) => {
+        recordMiniGameResult(modeId, result);
+        saveProgress();
+      },
+      onClose: () => { updatePlayerStatsUi(); saveProgress(); },
+    });
+    return;
+  }
+
   const targetLocationId = portal.targetLocationId || portal.to;
   if (!targetLocationId) {
     showNotification("Портал пока нестабилен.");
@@ -1025,6 +1054,16 @@ function handlePortalInteraction(portal) {
   }
 
   switchLocation(targetLocationId, portal.spawn);
+}
+
+function recordMiniGameResult(modeId, result) {
+  if (!miniGameStats[modeId]) {
+    miniGameStats[modeId] = { wins: 0, losses: 0, draws: 0 };
+  }
+  const s = miniGameStats[modeId];
+  if (result === "win")  s.wins   = (s.wins   || 0) + 1;
+  if (result === "lose") s.losses = (s.losses || 0) + 1;
+  if (result === "draw") s.draws  = (s.draws  || 0) + 1;
 }
 
 async function handleRuneInteraction(rune) {
@@ -1767,7 +1806,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTankOpen() || isTetrisOpen() || isTutorialOpen()) {
+  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTankOpen() || isTetrisOpen() || isTutorialOpen() || isMiniGameOpen()) {
     return;
   }
 
@@ -1912,6 +1951,7 @@ function getControlLegendContext() {
     nearbyNPC: interactable?.type === "npc",
     nearbyPortal,
     nearbyLockedPortal: nearbyPortal && Boolean(interactable.entity.locked),
+    nearbyMiniGame: nearbyPortal && Boolean(interactable.entity.targetMode) && !interactable.entity.locked,
     nearbyRune,
     nearbyInteractable: Boolean(interactable),
     nearbyExit: !inDialog && Boolean(findNearbyExit()),
@@ -2099,7 +2139,19 @@ const PORTAL_ID_LABELS = {
   portal_echo_maze_entrance: "🚪 Выйти",
 };
 
+const MODE_LABELS = {
+  tic_tac_toe: "✖️ Логика",
+  blackjack:   "🃏 Блэкджек",
+  poker_lite:  "♠️ Покер",
+  chess:       "♟️ Стратегия",
+  minesweeper: "💣 Сапёр",
+  sokoban:     "📦 Головоломки",
+  tron_duel:   "⚡ Кибер",
+  dice_combo:  "🎲 Удача",
+};
+
 function getPortalLabel(object) {
+  if (object.targetMode && MODE_LABELS[object.targetMode]) return MODE_LABELS[object.targetMode];
   return PORTAL_LABELS[object.actionType] || PORTAL_ID_LABELS[object.id] || null;
 }
 

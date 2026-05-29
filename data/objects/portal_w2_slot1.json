@@ -1,17 +1,17 @@
 {
   "id": "portal_w2_slot1",
-  "name": "Портал 1",
+  "name": "Измерение логики",
   "type": "portal",
   "position": { "x": 424, "y": 288 },
   "marker": { "x": 424, "y": 224 },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "locked": true,
-  "lockedMessage": "Этот портал ещё не открыт.",
-  "description": "Скоро здесь появится новая игра."
+  "targetMode": "tic_tac_toe",
+  "locked": false,
+  "description": "Крестики-нолики против бота или с другом."
 }

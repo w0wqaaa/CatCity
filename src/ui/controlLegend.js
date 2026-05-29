@@ -57,7 +57,11 @@ export function updateControlLegend(context = null) {
     } else if (context.nearbyRune) {
       lines.push("E — активировать руну");
     } else if (context.nearbyPortal) {
-      lines.push(context.nearbyLockedPortal ? "E — осмотреть портал" : "E — войти в портал");
+      if (context.nearbyMiniGame) {
+        lines.push("E — войти в измерение");
+      } else {
+        lines.push(context.nearbyLockedPortal ? "E — осмотреть портал" : "E — войти в портал");
+      }
     } else if (context.nearbyExit) {
       lines.push("E — перейти");
     } else if (context.nearbyInteractable) {
