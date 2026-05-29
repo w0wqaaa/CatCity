@@ -1,9 +1,9 @@
 {
-  "id": "portal_w2_slot5",
-  "name": "Минное измерение",
+  "id": "portal_strategy",
+  "name": "Измерение стратегий",
   "type": "portal",
-  "position": { "x": 768, "y": 760 },
-  "marker": { "x": 768, "y": 696 },
+  "position": { "x": 1112, "y": 712 },
+  "marker": { "x": 1112, "y": 648 },
   "sprite": "assets/objects/portals/portal_purple_locked.png",
   "width": 64,
   "height": 72,
@@ -11,7 +11,7 @@
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "targetMode": "minesweeper",
+  "targetMode": "chess",
   "locked": false,
-  "description": "Сапёр. Скоро."
+  "description": "Шахматы. Скоро."
 }

@@ -5,7 +5,7 @@ import { CANVAS, INTERACT_RADIUS, TILE_SIZE } from "../config/gameConfig.js?v=lo
 import { NPC } from "../entities/NPC.js?v=spritesheet-combat-1";
 import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
 import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
-import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=echo-maze-1";
+import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=minigames-2";
 import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=minigames-1";
 import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
 import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
@@ -25,7 +25,7 @@ import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
-import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=minigames-2";
+import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=minigames-3";
 
 const SAVE_VERSION = 1;
 const PLAYER_DEFAULT_STATS = {

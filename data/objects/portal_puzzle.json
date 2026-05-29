@@ -1,0 +1,17 @@
+{
+  "id": "portal_puzzle",
+  "name": "Портал головоломок",
+  "type": "portal",
+  "position": { "x": 620, "y": 512 },
+  "marker": { "x": 620, "y": 448 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "sokoban",
+  "locked": false,
+  "description": "Sokoban. Скоро."
+}

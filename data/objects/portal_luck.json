@@ -1,9 +1,9 @@
 {
-  "id": "portal_w2_slot4",
-  "name": "Измерение стратегий",
+  "id": "portal_luck",
+  "name": "Измерение удачи",
   "type": "portal",
-  "position": { "x": 1112, "y": 712 },
-  "marker": { "x": 1112, "y": 648 },
+  "position": { "x": 916, "y": 512 },
+  "marker": { "x": 916, "y": 448 },
   "sprite": "assets/objects/portals/portal_purple_locked.png",
   "width": 64,
   "height": 72,
@@ -11,7 +11,7 @@
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "targetMode": "chess",
+  "targetMode": "dice_combo",
   "locked": false,
-  "description": "Шахматы. Скоро."
+  "description": "Кости. Скоро."
 }

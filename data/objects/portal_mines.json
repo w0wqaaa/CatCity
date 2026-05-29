@@ -1,9 +1,9 @@
 {
-  "id": "portal_w2_slot6",
-  "name": "Кибер-измерение",
+  "id": "portal_mines",
+  "name": "Минное измерение",
   "type": "portal",
-  "position": { "x": 1112, "y": 288 },
-  "marker": { "x": 1112, "y": 224 },
+  "position": { "x": 768, "y": 760 },
+  "marker": { "x": 768, "y": 696 },
   "sprite": "assets/objects/portals/portal_purple_locked.png",
   "width": 64,
   "height": 72,
@@ -11,7 +11,7 @@
   "radius": 105,
   "interactable": true,
   "actionType": "portal",
-  "targetMode": "tron_duel",
+  "targetMode": "minesweeper",
   "locked": false,
-  "description": "Tron Duel. Скоро."
+  "description": "Сапёр. Скоро."
 }

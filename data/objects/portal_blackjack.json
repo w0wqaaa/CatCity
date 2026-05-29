@@ -1,5 +1,5 @@
 {
-  "id": "portal_w2_slot2",
+  "id": "portal_blackjack",
   "name": "Робот-крупье",
   "type": "portal",
   "position": { "x": 768, "y": 224 },
@@ -13,5 +13,5 @@
   "actionType": "portal",
   "targetMode": "blackjack",
   "locked": false,
-  "description": "Карточное измерение. Блэкджек против робота-крупье."
+  "description": "Блэкджек против робота-крупье."
 }

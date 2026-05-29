@@ -66,7 +66,11 @@ export function updateMinimap(state = null) {
   objects
     .filter((object) => object.type === "portal")
     .forEach((portal) => {
-      const color = portal.locked ? "#b86cff" : "#65f4d0";
+      // Порталы мини-игр — отдельный золотой цвет
+      let color;
+      if (portal.targetMode) color = "#ffcc44";
+      else if (portal.locked) color = "#b86cff";
+      else color = "#65f4d0";
       drawPoint(portal.position.x, portal.position.y, offsetX, offsetY, scale, color, 3.2);
     });
   objects

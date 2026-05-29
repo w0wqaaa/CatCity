@@ -7,12 +7,14 @@
   "quests": [],
   "objects": [
     "portal_w2_back",
-    "portal_w2_slot1",
-    "portal_w2_slot2",
-    "portal_w2_slot3",
-    "portal_w2_slot4",
-    "portal_w2_slot5",
-    "portal_w2_slot6"
+    "portal_tic_tac_toe",
+    "portal_blackjack",
+    "portal_poker",
+    "portal_strategy",
+    "portal_mines",
+    "portal_cyber",
+    "portal_puzzle",
+    "portal_luck"
   ],
   "items": [],
   "spawn": {
