@@ -9,10 +9,10 @@ import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../
 import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=echo-maze-1";
 import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
 import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
-import { renderInventoryList, renderPlayerStats, renderQuestList } from "../ui/uiManager.js";
+import { renderInventoryGrid, renderEquipmentPanel, renderInventoryList, renderPlayerStats, renderQuestList } from "../ui/uiManager.js?v=inv-grid-1";
 import { attackFirstMob, canAttack, damagePlayer as applyPlayerDamage, getAttackBox as buildAttackBox, getMobBox, killMob, rectanglesOverlap, restorePlayerAfterDeath } from "../systems/combatSystem.js";
 import { getNpcDialogStage, openDialogState, advanceDialog } from "../systems/dialogSystem.js";
-import { addGold as addPlayerGold, addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats } from "../systems/inventorySystem.js";
+import { addGold as addPlayerGold, addItemToInventory, consumeInventoryItems, hasItem as inventoryHasItem, hasRequiredItems as inventoryHasRequiredItems, normalizePlayerStats as normalizeStats, removeItemFromInventory } from "../systems/inventorySystem.js";
 import { findNearestInteractable as findNearestInteraction, findNearbyExit as findNearbyLocationExit, isPointInArea } from "../systems/interactionSystem.js";
 import { getCurrentMoveVector as getMoveVector, getMoveSpeed, isKeyDown as isAliasDown, isRunning } from "../systems/movementSystem.js";
 import { abandonQuest as abandonQuestState, canTurnInQuestToNpc as canTurnInQuestToNpcSystem, checkQuestConditions, completeQuest as completeQuestState, finishQuest as finishQuestState, startQuest as startQuestState, updateQuestStatus as updateQuestStatusState } from "../systems/questSystem.js";
@@ -89,6 +89,7 @@ let echoMazeState = createDefaultEchoMazeState();
 let echoMazeResults = [];
 let puzzleGameResults = [];
 let snakeGameResults  = [];
+let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -132,6 +133,12 @@ const tutorialButton = document.getElementById("tutorialButton");
 const inventoryPanel = document.getElementById("inventoryPanel");
 const inventoryList = document.getElementById("inventoryList");
 const closeInventory = document.getElementById("closeInventory");
+const invGrid           = document.getElementById("invGrid");
+const invGoldDisplay    = document.getElementById("invGoldDisplay");
+const equipmentPanel    = document.getElementById("equipmentPanel");
+const equipmentButton   = document.getElementById("equipmentButton");
+const closeEquipmentBtn = document.getElementById("closeEquipment");
+const equipSlots        = document.getElementById("equipSlots");
 const logoutButton = document.getElementById("logoutButton");
 const dialogBox = document.getElementById("dialogBox");
 const dialogText = document.getElementById("dialogText");
@@ -247,6 +254,12 @@ function setupEventListeners() {
   questsButton.addEventListener("click", toggleQuestPanel);
 
   inventoryButton.addEventListener("click", toggleInventoryPanel);
+  if (equipmentButton) {
+    equipmentButton.addEventListener("click", toggleEquipmentPanel);
+  }
+  if (closeEquipmentBtn) {
+    closeEquipmentBtn.addEventListener("click", () => equipmentPanel.classList.remove("visible"));
+  }
   guideButton.addEventListener("click", openCurrentLocationGuide);
   tutorialButton.addEventListener("click", () => openTutorial());
 
@@ -517,6 +530,7 @@ function loadProgress() {
   echoMazeState = normalizeEchoMazeState(save?.echoMazeState);
   echoMazeResults = normalizeEchoMazeResults(save?.echoMazeResults);
   seenLocationGuides = normalizeSeenLocationGuides(save?.seenLocationGuides);
+  equipment = save?.equipment || { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
   gameState.setProgress({ playerCharacter, currentLocationId, questStates, questLog, inventory, playerStats, echoMazeState, echoMazeResults, seenLocationGuides });
   gameState.echoMazeState = echoMazeState;
   gameState.echoMazeResults = echoMazeResults;
@@ -543,6 +557,7 @@ function saveProgress() {
     questStates,
     questLog,
     inventory,
+    equipment,
     echoMazeState,
     echoMazeResults,
     seenLocationGuides,
@@ -709,15 +724,26 @@ function toggleQuestPanel() {
 function toggleInventoryPanel() {
   inventoryPanel.classList.toggle("visible");
   questsPanel.classList.remove("visible");
-  updateInventoryList();
+  if (equipmentPanel) equipmentPanel.classList.remove("visible");
+  updateInventoryGrid();
+}
+
+function toggleEquipmentPanel() {
+  if (equipmentPanel) equipmentPanel.classList.toggle("visible");
+  inventoryPanel.classList.remove("visible");
+  questsPanel.classList.remove("visible");
+  closeShop();
+  renderEquipmentPanel(equipSlots, equipment);
 }
 
 function closeMenus() {
   const hadOpenMenu = questsPanel.classList.contains("visible") ||
     inventoryPanel.classList.contains("visible") ||
+    Boolean(equipmentPanel?.classList.contains("visible")) ||
     Boolean(shopPanel?.classList.contains("visible"));
   questsPanel.classList.remove("visible");
   inventoryPanel.classList.remove("visible");
+  if (equipmentPanel) equipmentPanel.classList.remove("visible");
   closeShop();
   return hadOpenMenu;
 }
@@ -858,6 +884,11 @@ async function tryTalk() {
 
   if (isRuneObject(interactable.entity)) {
     await handleRuneInteraction(interactable.entity);
+    return true;
+  }
+
+  if (interactable.entity.actionType === "heal") {
+    handleHealInteraction(interactable.entity);
     return true;
   }
 
@@ -1320,8 +1351,48 @@ function hasRequiredItems(items) {
   return inventoryHasRequiredItems(inventory, items);
 }
 
-function updateInventoryList() {
-  renderInventoryList(inventoryList, inventory);
+function updateInventoryGrid() {
+  renderInventoryGrid(invGrid, invGoldDisplay, inventory, playerStats, { onUseItem: useItem });
+}
+// keep old name as alias:
+function updateInventoryList() { updateInventoryGrid(); }
+
+function useItem(itemId) {
+  const item = inventory[itemId];
+  if (!item) return;
+  if (item.effect === "restoreHp") {
+    const amount = item.value === -1 ? playerStats.maxHp : item.value;
+    const healed = Math.min(amount, playerStats.maxHp - playerStats.hp);
+    if (healed <= 0) { showNotification("HP уже максимальный."); return; }
+    playerStats.hp = Math.min(playerStats.maxHp, playerStats.hp + amount);
+    removeItemFromInventory(inventory, itemId, 1);
+    updatePlayerStatsUi();
+    updateInventoryGrid();
+    showNotification(`+${healed} HP`);
+    saveProgress();
+  } else if (item.effect === "restoreMp") {
+    const amount = item.value === -1 ? playerStats.maxMp : item.value;
+    const restored = Math.min(amount, playerStats.maxMp - playerStats.mp);
+    if (restored <= 0) { showNotification("MP уже максимальный."); return; }
+    playerStats.mp = Math.min(playerStats.maxMp, playerStats.mp + amount);
+    removeItemFromInventory(inventory, itemId, 1);
+    updatePlayerStatsUi();
+    updateInventoryGrid();
+    showNotification(`+${restored} MP`);
+    saveProgress();
+  }
+}
+
+function handleHealInteraction(obj) {
+  const amount = obj.healAmount === -1 ? playerStats.maxHp : (obj.healAmount || playerStats.maxHp);
+  if (playerStats.hp >= playerStats.maxHp) {
+    showNotification("Ты полностью здоров.");
+    return;
+  }
+  playerStats.hp = Math.min(playerStats.maxHp, playerStats.hp + amount);
+  updatePlayerStatsUi();
+  saveProgress();
+  showNotification("❤️ Здоровье восстановлено!");
 }
 
 function collectObjectRewards(objectId, questIds) {

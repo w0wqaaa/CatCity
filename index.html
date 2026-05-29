@@ -36,6 +36,7 @@
     <span id="playerStats"></span>
     <button id="questsButton">Квесты</button>
     <button id="inventoryButton">Инвентарь</button>
+    <button id="equipmentButton">🗡️ Снаряжение</button>
     <button id="guideButton">Локация</button>
     <button id="tutorialButton">📖 Обучение</button>
     <button id="logoutButton">Выйти</button>
@@ -47,9 +48,21 @@
     </div>
 
     <div id="inventoryPanel" class="hidden">
-      <h3>Инвентарь</h3>
-      <ul id="inventoryList"></ul>
-      <button id="closeInventory">Закрыть</button>
+      <div id="invPanelHeader">
+        <span class="inv-title">Инвентарь</span>
+        <span id="invGoldDisplay">💰 0</span>
+        <button id="closeInventory" type="button">✕</button>
+      </div>
+      <div id="invGrid"></div>
+    </div>
+
+    <div id="equipmentPanel" class="hidden">
+      <div id="equipPanelHeader">
+        <span class="equip-title">Снаряжение</span>
+        <button id="closeEquipment" type="button">✕</button>
+      </div>
+      <div id="equipSlots"></div>
+      <div id="equipHint">Надевай предметы из инвентаря</div>
     </div>
 
     <div id="hintE" class="hidden">Нажмите E, чтобы взаимодействовать</div>

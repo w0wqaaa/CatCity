@@ -17,6 +17,12 @@ export function addItemToInventory(inventory, itemData, quantity = 1) {
     id: item.id,
     name: item.name || item.id,
     quantity: current + quantity,
+    type: item.type || "misc",
+    effect: item.effect || null,
+    value: item.value || 0,
+    icon: item.icon || null,
+    description: item.description || "",
+    equipSlot: item.equipSlot || null,
   };
   return inventory[item.id];
 }
