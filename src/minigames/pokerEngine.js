@@ -1,8 +1,8 @@
 /**
- * Texas Hold'em engine — heads-up (2 игрока).
- * Чистый стейт-машина: НИКАКОГО DOM и НИКАКИХ ботов.
- * Ходы подаются через applyAction(action). Это делает движок
- * пригодным для онлайна: локально action создаёт UI, в сети — сеть.
+ * Texas Hold'em engine — N игроков (2–6).
+ * Чистая стейт-машина: НИКАКОГО DOM и НИКАКИХ ботов.
+ * Ходы подаются через applyAction(action) — это делает движок
+ * пригодным для онлайна (локально action создаёт UI, в сети — сеть).
  *
  * action: { type: "fold"|"check"|"call"|"raise"|"allin", amount? }
  */
@@ -28,7 +28,9 @@ function buildDeck() {
 
 // ─── Создание игры ─────────────────────────────────────────────────────────
 export function createPokerEngine(playerNames = ["Игрок 1", "Игрок 2"]) {
+  const N = playerNames.length;
   const state = {
+    n: N,
     players: playerNames.map((name, i) => ({
       i, name,
       chips: START_CHIPS,
@@ -38,17 +40,19 @@ export function createPokerEngine(playerNames = ["Игрок 1", "Игрок 2"]
       folded: false,
       allIn: false,
       acted: false,
+      out: false,       // выбыл из игры (нет фишек)
     })),
     deck: [],
     community: [],
     pot: 0,
-    stage: "idle",      // idle|preflop|flop|turn|river|showdown|handover
+    pots: [],           // боковые банки (на вскрытии)
+    stage: "idle",      // idle|preflop|flop|turn|river|showdown|handover|gameover
     currentBet: 0,
     minRaise: BIG_BLIND,
-    button: 0,          // дилерская кнопка
-    toAct: 0,           // чей ход
+    button: 0,
+    toAct: 0,
     lastWinner: null,
-    lastResult: null,   // строка-описание исхода
+    lastResult: null,
     handNumber: 0,
   };
 
@@ -62,84 +66,108 @@ export function createPokerEngine(playerNames = ["Игрок 1", "Игрок 2"]
 
 // ─── Новая раздача ────────────────────────────────────────────────────────
 function startHand(state) {
-  // Проверяем что у обоих есть фишки
-  const alive = state.players.filter(p => p.chips > 0);
-  if (alive.length < 2) {
-    state.stage = "gameover";
-    return state;
-  }
+  // Отмечаем выбывших
+  state.players.forEach(p => { if (p.chips <= 0) p.out = true; });
+  const alive = state.players.filter(p => !p.out);
+  if (alive.length < 2) { state.stage = "gameover"; return state; }
 
   state.handNumber++;
   state.deck = buildDeck();
   state.community = [];
   state.pot = 0;
+  state.pots = [];
   state.currentBet = 0;
   state.minRaise = BIG_BLIND;
   state.lastWinner = null;
   state.lastResult = null;
-  state.button = state.handNumber === 1 ? 0 : (state.button + 1) % 2;
+
+  // Перемещаем кнопку на следующего живого
+  state.button = state.handNumber === 1
+    ? firstAlive(state, 0)
+    : nextAlive(state, state.button);
 
   state.players.forEach(p => {
-    p.hole = [state.deck.pop(), state.deck.pop()];
     p.bet = 0; p.committed = 0; p.folded = false; p.allIn = false; p.acted = false;
+    p.hole = p.out ? [] : [state.deck.pop(), state.deck.pop()];
   });
 
-  // Heads-up: на баттоне малый блайнд и ходит первым на префлопе
-  const sbIdx = state.button;
-  const bbIdx = (state.button + 1) % 2;
+  const headsUp = alive.length === 2;
+  let sbIdx, bbIdx, firstToAct;
+
+  if (headsUp) {
+    // Heads-up: кнопка = малый блайнд, ходит первым на префлопе
+    sbIdx = state.button;
+    bbIdx = nextAlive(state, state.button);
+    firstToAct = sbIdx;
+  } else {
+    sbIdx = nextAlive(state, state.button);
+    bbIdx = nextAlive(state, sbIdx);
+    firstToAct = nextAlive(state, bbIdx); // UTG
+  }
+
   postBlind(state, sbIdx, SMALL_BLIND);
   postBlind(state, bbIdx, BIG_BLIND);
   state.currentBet = BIG_BLIND;
   state.minRaise = BIG_BLIND;
 
   state.stage = "preflop";
-  state.toAct = sbIdx; // дилер/SB ходит первым на префлопе
-  // блайнды не считаются "acted" — могут ещё повышать
   state.players.forEach(p => p.acted = false);
+  state.toAct = firstToAct;
+  if (notActable(state.players[state.toAct])) advanceTurn(state);
   return state;
 }
 
 function postBlind(state, idx, amount) {
   const p = state.players[idx];
   const pay = Math.min(amount, p.chips);
-  p.chips -= pay;
-  p.bet += pay;
-  p.committed += pay;
-  state.pot += pay;
+  p.chips -= pay; p.bet += pay; p.committed += pay; state.pot += pay;
   if (p.chips === 0) p.allIn = true;
 }
 
-// ─── Доступные действия для текущего игрока ──────────────────────────────────
+// ─── Навигация по кругу ───────────────────────────────────────────────────
+function firstAlive(state, from) {
+  for (let k = 0; k < state.n; k++) {
+    const i = (from + k) % state.n;
+    if (!state.players[i].out) return i;
+  }
+  return from;
+}
+function nextAlive(state, from) {
+  for (let k = 1; k <= state.n; k++) {
+    const i = (from + k) % state.n;
+    if (!state.players[i].out) return i;
+  }
+  return from;
+}
+function notActable(p) { return p.out || p.folded || p.allIn; }
+
+function advanceTurn(state) {
+  let guard = 0, i = state.toAct;
+  do {
+    i = (i + 1) % state.n;
+    guard++;
+  } while (notActable(state.players[i]) && guard <= state.n);
+  state.toAct = i;
+}
+
+// ─── Доступные действия ──────────────────────────────────────────────────────
 function legalActions(state) {
   if (!["preflop","flop","turn","river"].includes(state.stage)) return [];
   const p = state.players[state.toAct];
-  if (p.folded || p.allIn) return [];
+  if (notActable(p)) return [];
 
   const toCall = state.currentBet - p.bet;
-  const actions = [];
+  const actions = [{ type: "fold" }];
 
-  actions.push({ type: "fold" });
+  if (toCall === 0) actions.push({ type: "check" });
+  else actions.push({ type: "call", amount: Math.min(toCall, p.chips) });
 
-  if (toCall === 0) {
-    actions.push({ type: "check" });
-  } else {
-    actions.push({ type: "call", amount: Math.min(toCall, p.chips) });
-  }
-
-  // Raise возможен если есть фишки сверх колла
   if (p.chips > toCall) {
     const minRaiseTo = state.currentBet + state.minRaise;
-    const maxRaiseTo = p.bet + p.chips; // all-in
-    actions.push({
-      type: "raise",
-      min: Math.min(minRaiseTo, maxRaiseTo),
-      max: maxRaiseTo,
-    });
+    const maxRaiseTo = p.bet + p.chips;
+    actions.push({ type: "raise", min: Math.min(minRaiseTo, maxRaiseTo), max: maxRaiseTo });
   }
-  // All-in всегда доступен если есть фишки
-  if (p.chips > 0) {
-    actions.push({ type: "allin", amount: p.bet + p.chips });
-  }
+  if (p.chips > 0) actions.push({ type: "allin", amount: p.bet + p.chips });
 
   return actions;
 }
@@ -148,106 +176,77 @@ function legalActions(state) {
 function applyAction(state, action) {
   if (!["preflop","flop","turn","river"].includes(state.stage)) return state;
   const p = state.players[state.toAct];
-  if (p.folded || p.allIn) { advanceTurn(state); return state; }
+  if (notActable(p)) { advanceTurn(state); return state; }
 
   const toCall = state.currentBet - p.bet;
 
   switch (action.type) {
     case "fold":
-      p.folded = true;
-      p.acted = true;
+      p.folded = true; p.acted = true;
       break;
-
     case "check":
-      if (toCall !== 0) return state; // нелегально
+      if (toCall !== 0) return state;
       p.acted = true;
       break;
-
-    case "call": {
-      const pay = Math.min(toCall, p.chips);
-      commit(state, p, pay);
+    case "call":
+      commit(state, p, Math.min(toCall, p.chips));
       p.acted = true;
       break;
-    }
-
     case "raise": {
-      // amount = "raise TO" (итоговая ставка игрока в раунде)
       let raiseTo = action.amount;
       const maxTo = p.bet + p.chips;
       if (raiseTo > maxTo) raiseTo = maxTo;
       const minTo = state.currentBet + state.minRaise;
-      if (raiseTo < minTo && raiseTo < maxTo) return state; // мало
-      const pay = raiseTo - p.bet;
-      commit(state, p, pay);
+      if (raiseTo < minTo && raiseTo < maxTo) return state;
+      commit(state, p, raiseTo - p.bet);
       const raiseSize = raiseTo - state.currentBet;
       if (raiseSize >= state.minRaise) state.minRaise = raiseSize;
       state.currentBet = Math.max(state.currentBet, raiseTo);
-      // Повышение открывает новый круг — остальные снова должны ответить
-      state.players.forEach(o => { if (!o.folded && !o.allIn && o !== p) o.acted = false; });
+      reopenAction(state, p);
       p.acted = true;
       break;
     }
-
     case "allin": {
-      const pay = p.chips;
-      commit(state, p, pay);
+      commit(state, p, p.chips);
       if (p.bet > state.currentBet) {
         const raiseSize = p.bet - state.currentBet;
         if (raiseSize >= state.minRaise) state.minRaise = raiseSize;
         state.currentBet = p.bet;
-        state.players.forEach(o => { if (!o.folded && !o.allIn && o !== p) o.acted = false; });
+        reopenAction(state, p);
       }
       p.acted = true;
       break;
     }
-
     default: return state;
   }
 
-  // Проверка: остался ли один не-сбросивший
-  const live = state.players.filter(o => !o.folded);
-  if (live.length === 1) {
-    endHand(state, live[0]);
-    return state;
-  }
+  const live = state.players.filter(o => !o.folded && !o.out);
+  if (live.length === 1) { endHandUncontested(state, live[0]); return state; }
 
-  if (isBettingRoundOver(state)) {
-    nextStage(state);
-  } else {
-    advanceTurn(state);
-  }
+  if (isBettingRoundOver(state)) nextStage(state);
+  else advanceTurn(state);
   return state;
 }
 
 function commit(state, p, pay) {
   pay = Math.min(pay, p.chips);
-  p.chips -= pay;
-  p.bet += pay;
-  p.committed += pay;
-  state.pot += pay;
+  p.chips -= pay; p.bet += pay; p.committed += pay; state.pot += pay;
   if (p.chips === 0) p.allIn = true;
 }
 
-function advanceTurn(state) {
-  let next = (state.toAct + 1) % 2;
-  let guard = 0;
-  while ((state.players[next].folded || state.players[next].allIn) && guard < 4) {
-    next = (next + 1) % 2;
-    guard++;
-  }
-  state.toAct = next;
+function reopenAction(state, raiser) {
+  state.players.forEach(o => {
+    if (!o.folded && !o.allIn && !o.out && o !== raiser) o.acted = false;
+  });
 }
 
 function isBettingRoundOver(state) {
-  const active = state.players.filter(p => !p.folded && !p.allIn);
-  // Если активных <=1 — торговля окончена (остальные all-in/fold)
+  const active = state.players.filter(p => !p.folded && !p.allIn && !p.out);
   if (active.length === 0) return true;
-  // Все активные сделали ход и уравняли ставку
   return active.every(p => p.acted && p.bet === state.currentBet);
 }
 
 function nextStage(state) {
-  // Сброс ставок раунда
   state.players.forEach(p => { p.bet = 0; p.acted = false; });
   state.currentBet = 0;
   state.minRaise = BIG_BLIND;
@@ -262,74 +261,103 @@ function nextStage(state) {
     state.community.push(state.deck.pop());
     state.stage = "river";
   } else if (state.stage === "river") {
-    showdown(state);
-    return;
+    showdown(state); return;
   }
 
-  // Если оба all-in — досдаём борд до ривера и шоудаун
-  const canAct = state.players.filter(p => !p.folded && !p.allIn);
+  // Если ≤1 может действовать — досдаём борд и вскрытие
+  const canAct = state.players.filter(p => !p.folded && !p.allIn && !p.out);
   if (canAct.length < 2) {
-    // авто-досдача
     while (state.community.length < 5) state.community.push(state.deck.pop());
-    showdown(state);
-    return;
+    showdown(state); return;
   }
 
-  // Постфлоп первым ходит НЕ баттон (big blind)
-  state.toAct = (state.button + 1) % 2;
-  if (state.players[state.toAct].folded || state.players[state.toAct].allIn) advanceTurn(state);
+  // Постфлоп первым ходит первый живой слева от кнопки
+  state.toAct = nextAlive(state, state.button);
+  if (notActable(state.players[state.toAct])) advanceTurn(state);
 }
 
-// ─── Вскрытие ────────────────────────────────────────────────────────────────
+// ─── Вскрытие с боковыми банками ────────────────────────────────────────────
 function showdown(state) {
-  const live = state.players.filter(p => !p.folded);
-  let best = null, winners = [];
-  for (const p of live) {
-    p.handRank = evaluate7([...p.hole, ...state.community]);
-    if (!best || compareRank(p.handRank, best) > 0) {
-      best = p.handRank; winners = [p];
-    } else if (compareRank(p.handRank, best) === 0) {
-      winners.push(p);
-    }
-  }
-  if (winners.length === 1) {
-    endHand(state, winners[0], best);
-  } else {
-    // дележ банка
-    const share = Math.floor(state.pot / winners.length);
-    winners.forEach(w => w.chips += share);
-    state.lastWinner = winners.map(w => w.name).join(" и ");
-    state.lastResult = `Ничья! Банк ${state.pot} разделён. ${HAND_NAMES[best[0]]}`;
-    state.pot = 0;
-    state.stage = "handover";
-  }
-}
+  // Оцениваем руки не сбросивших
+  state.players.forEach(p => {
+    p.handRank = (!p.folded && !p.out)
+      ? evaluate7([...p.hole, ...state.community])
+      : null;
+  });
 
-function endHand(state, winner, rank = null) {
-  winner.chips += state.pot;
-  state.lastWinner = winner.name;
-  if (rank) {
-    state.lastResult = `${winner.name} выигрывает ${state.pot} (${HAND_NAMES[rank[0]]})`;
-  } else {
-    state.lastResult = `${winner.name} забирает банк ${state.pot} (соперник сбросил)`;
-  }
+  const pots = buildSidePots(state);
+  const summary = [];
+
+  pots.forEach((pot, idx) => {
+    const contenders = pot.eligible
+      .map(i => state.players[i])
+      .filter(p => p.handRank);
+    if (contenders.length === 0) return;
+
+    let best = null, winners = [];
+    for (const p of contenders) {
+      if (!best || compareRank(p.handRank, best) > 0) { best = p.handRank; winners = [p]; }
+      else if (compareRank(p.handRank, best) === 0) winners.push(p);
+    }
+    const share = Math.floor(pot.amount / winners.length);
+    let rem = pot.amount - share * winners.length;
+    winners.forEach(w => { w.chips += share; });
+    if (rem > 0) winners[0].chips += rem; // нечётный остаток — первому
+    const potLabel = pots.length > 1 ? (idx === 0 ? "Основной банк" : `Сайд-банк ${idx}`) : "Банк";
+    summary.push(`${potLabel} ${pot.amount}: ${winners.map(w => w.name).join(", ")} (${HAND_NAMES[best[0]]})`);
+  });
+
+  state.lastWinner = summary.length ? summary[0].split(":")[1]?.trim() || "—" : "—";
+  state.lastResult = summary.join(" · ");
   state.pot = 0;
   state.stage = "handover";
 }
 
-// ─── Оценка покерной руки (7 карт → лучшая 5-карточная) ─────────────────────
+/** Боковые банки на основе committed каждого игрока */
+function buildSidePots(state) {
+  const remaining = state.players.map(p => p.committed);
+  const pots = [];
+  let guard = 0;
+  while (guard++ < 20) {
+    const positive = state.players
+      .map((p, i) => ({ i, r: remaining[i] }))
+      .filter(x => x.r > 0);
+    if (positive.length === 0) break;
+    const minc = Math.min(...positive.map(x => x.r));
+    let amount = 0;
+    const contributors = [];
+    for (const { i } of positive) {
+      remaining[i] -= minc;
+      amount += minc;
+      contributors.push(i);
+    }
+    const eligible = contributors.filter(i => !state.players[i].folded && !state.players[i].out);
+    pots.push({ amount, eligible });
+  }
+  // Склеиваем подряд идущие банки с одинаковым набором eligible
+  return pots;
+}
+
+function endHandUncontested(state, winner) {
+  winner.chips += state.pot;
+  state.lastWinner = winner.name;
+  state.lastResult = `${winner.name} забирает банк ${state.pot} (остальные сбросили)`;
+  state.pot = 0;
+  state.stage = "handover";
+}
+
+// ─── Оценка руки (7 → лучшая 5) ─────────────────────────────────────────────
 const HAND_NAMES = [
   "Старшая карта", "Пара", "Две пары", "Тройка", "Стрит",
   "Флеш", "Фулл-хаус", "Каре", "Стрит-флеш", "Роял-флеш",
 ];
 
 function evaluate7(cards) {
-  // перебор C(7,5)=21
   let best = null;
-  const idx = [0,1,2,3,4,5,6];
   for (let a = 0; a < 7; a++)
-    for (let b = a+1; b < 7; b++) {
-      const five = idx.filter(i => i !== a && i !== b).map(i => cards[i]);
+    for (let b = a + 1; b < 7; b++) {
+      const five = [];
+      for (let i = 0; i < 7; i++) if (i !== a && i !== b) five.push(cards[i]);
       const r = rank5(five);
       if (!best || compareRank(r, best) > 0) best = r;
     }
@@ -340,34 +368,26 @@ function rank5(cards) {
   const vals = cards.map(c => RANK_VAL[c.rank]).sort((a,b) => b - a);
   const suits = cards.map(c => c.suit);
   const isFlush = suits.every(s => s === suits[0]);
-
-  // Подсчёт по достоинствам
   const counts = {};
   vals.forEach(v => counts[v] = (counts[v]||0)+1);
-  const groups = Object.entries(counts)
-    .map(([v,c]) => ({ v: +v, c }))
+  const groups = Object.entries(counts).map(([v,c]) => ({ v:+v, c }))
     .sort((x,y) => y.c - x.c || y.v - x.v);
-
-  // Стрит (учёт A-2-3-4-5)
   const uniq = [...new Set(vals)];
   let straightHigh = 0;
   if (uniq.length === 5) {
     if (uniq[0] - uniq[4] === 4) straightHigh = uniq[0];
-    else if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) straightHigh = 5; // wheel
+    else if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) straightHigh = 5;
   }
-
-  if (isFlush && straightHigh) {
-    return straightHigh === 14 ? [9, 14] : [8, straightHigh]; // роял / стрит-флеш
-  }
-  if (groups[0].c === 4) return [7, groups[0].v, groups[1].v];          // каре
-  if (groups[0].c === 3 && groups[1].c === 2) return [6, groups[0].v, groups[1].v]; // фулл
-  if (isFlush) return [5, ...vals];                                      // флеш
-  if (straightHigh) return [4, straightHigh];                            // стрит
-  if (groups[0].c === 3) return [3, groups[0].v, ...groups.slice(1).map(g=>g.v)]; // тройка
-  if (groups[0].c === 2 && groups[1].c === 2)                            // две пары
+  if (isFlush && straightHigh) return straightHigh === 14 ? [9,14] : [8, straightHigh];
+  if (groups[0].c === 4) return [7, groups[0].v, groups[1].v];
+  if (groups[0].c === 3 && groups[1].c === 2) return [6, groups[0].v, groups[1].v];
+  if (isFlush) return [5, ...vals];
+  if (straightHigh) return [4, straightHigh];
+  if (groups[0].c === 3) return [3, groups[0].v, ...groups.slice(1).map(g=>g.v)];
+  if (groups[0].c === 2 && groups[1].c === 2)
     return [2, Math.max(groups[0].v,groups[1].v), Math.min(groups[0].v,groups[1].v), groups[2].v];
-  if (groups[0].c === 2) return [1, groups[0].v, ...groups.slice(1).map(g=>g.v)]; // пара
-  return [0, ...vals];                                                   // старшая
+  if (groups[0].c === 2) return [1, groups[0].v, ...groups.slice(1).map(g=>g.v)];
+  return [0, ...vals];
 }
 
 function compareRank(a, b) {

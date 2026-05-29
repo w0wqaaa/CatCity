@@ -1960,3 +1960,26 @@ button {
   background: rgba(30,18,55,0.5); border-radius: 8px; padding: 6px 10px;
 }
 .pk-cards-inline { display: flex; }
+
+/* Poker: setup (выбор числа игроков) + список соперников */
+.pk-setup { text-align: center; padding: 18px 10px; width: 320px; max-width: calc(100vw - 50px); }
+.pk-setup-title { font-size: 19px; font-weight: bold; color: #cc99ff; margin-bottom: 8px; }
+.pk-setup-text { font-size: 13px; color: #b0a0d0; line-height: 1.6; margin-bottom: 16px; }
+.pk-setup-btns { display: flex; gap: 8px; justify-content: center; }
+.pk-num {
+  width: 46px; height: 46px; border-radius: 10px;
+  background: rgba(80,40,160,0.7); border: 1px solid #7744cc;
+  color: #eee; font-family: monospace; font-size: 18px; font-weight: bold; cursor: pointer;
+}
+.pk-num:hover { background: rgba(120,60,210,0.9); color: #fff; }
+
+.pk-opps {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  width: 100%; margin-bottom: 4px;
+}
+.pk-opps .pk-opp {
+  background: rgba(30,18,55,0.6); border: 1px solid rgba(90,55,160,0.4);
+  border-radius: 8px; padding: 5px 9px; font-size: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.pk-opp-folded { opacity: 0.45; }
