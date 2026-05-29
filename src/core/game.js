@@ -21,6 +21,7 @@ import { createMobRespawnEntry, processMobRespawns as processRespawnQueue } from
 import { buildSaveData, getSaveKey as buildSaveKey, readSavedProgress as readSavedProgressFromStorage, writeSave } from "../systems/saveSystem.js";
 import { createShopPurchase } from "../systems/shopSystem.js";
 import { initPuzzleGame, isPuzzleOpen, openPuzzleGame, getPuzzleResults } from "../ui/puzzleGame.js";
+import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "../ui/tetrisGame.js";
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
@@ -91,6 +92,7 @@ let echoMazeResults = [];
 let puzzleGameResults = [];
 let snakeGameResults  = [];
 let tankGameResults   = [];
+let tetrisGameResults = [];
 let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
 let seenLocationGuides = {};
 let playerCharacter = "boy";
@@ -208,6 +210,7 @@ async function startGame() {
   initPuzzleGame();
   initSnakeGame();
   initTankGame();
+  initTetrisGame();
   initTutorialGuide();
   initShopUi();
   setupEventListeners();
@@ -910,6 +913,11 @@ async function tryTalk() {
     return true;
   }
 
+  if (isTetrisPortal(interactable.entity)) {
+    handleTetrisPortal(interactable.entity);
+    return true;
+  }
+
   if (isPortalObject(interactable.entity)) {
     handlePortalInteraction(interactable.entity);
     return true;
@@ -925,7 +933,18 @@ async function tryTalk() {
 }
 
 function isPortalObject(object) {
-  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle" || object?.actionType === "snake" || object?.actionType === "tank";
+  return object?.type === "portal" || object?.actionType === "portal" || object?.actionType === "puzzle" || object?.actionType === "snake" || object?.actionType === "tank" || object?.actionType === "tetris";
+}
+
+function isTetrisPortal(object) { return object?.actionType === "tetris"; }
+
+function handleTetrisPortal(portal) {
+  if (portal.locked) { showNotification(portal.lockedMessage || "Портал заблокирован."); return; }
+  openTetrisGame({
+    playerName: currentUser || "Игрок",
+    savedResults: tetrisGameResults,
+    onClose: () => { tetrisGameResults = getTetrisResults(); saveProgress(); },
+  });
 }
 
 function isTankPortal(object) { return object?.actionType === "tank"; }
@@ -1708,7 +1727,7 @@ function update() {
 
   updateEchoMazeTimerUi();
 
-  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTankOpen() || isTutorialOpen()) {
+  if (inDialog || isPuzzleOpen() || isSnakeOpen() || isTankOpen() || isTetrisOpen() || isTutorialOpen()) {
     return;
   }
 

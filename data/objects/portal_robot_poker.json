@@ -1,6 +1,6 @@
 {
   "id": "portal_robot_poker",
-  "name": "Портал к Роботу-крупье",
+  "name": "Тетрис-башня",
   "type": "portal",
   "position": {
     "x": 768,
@@ -10,14 +10,13 @@
     "x": 768,
     "y": 160
   },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
   "radius": 105,
   "interactable": true,
-  "actionType": "portal",
-  "targetMode": "robot_poker",
-  "locked": true,
-  "description": "Здесь позже будет мини-игра в покер с роботом."
+  "actionType": "tetris",
+  "locked": false,
+  "description": "Башня из падающих блоков. Заполняй линии, не давай башне дорасти до верха."
 }

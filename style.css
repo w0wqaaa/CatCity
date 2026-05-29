@@ -1421,3 +1421,94 @@ button {
   font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px;
 }
 #tankRetryBtn:hover { background: #254530; color: #ccffcc; }
+
+/* ═══════════════════════════════════════════
+   TETRIS GAME OVERLAY
+   ═══════════════════════════════════════════ */
+#tetrisOverlay {
+  position: fixed; inset: 0;
+  background: rgba(4, 2, 14, 0.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+}
+#tetrisOverlay.hidden { display: none; }
+
+#tetrisPanel {
+  background: #100820; border: 2px solid #7744cc; border-radius: 14px;
+  overflow: hidden; box-shadow: 0 0 60px rgba(120,60,255,0.4);
+  width: 490px; max-width: calc(100vw - 24px); display: flex; flex-direction: column;
+}
+
+#tetrisTopBar {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  background: rgba(55,18,95,0.7); border-bottom: 1px solid rgba(120,70,200,0.4);
+  height: 48px; box-sizing: border-box; flex-shrink: 0;
+}
+#tetrisTitle { font-family: monospace; font-size: 15px; font-weight: bold; color: #cc99ff; flex: 1; }
+#tetrisTimerBox { font-family: monospace; font-size: 19px; color: #ffdd55; font-weight: bold; letter-spacing: 2px; min-width: 80px; text-align: center; }
+#tetrisTopBtns { display: flex; gap: 6px; flex-shrink: 0; }
+
+#tetrisHowBtn {
+  background: rgba(80,40,140,0.8); color: #cc99ff; border: 1px solid #7744cc;
+  border-radius: 50%; width: 30px; height: 30px;
+  font-family: monospace; font-size: 16px; cursor: pointer; padding: 0; line-height: 30px; text-align: center;
+}
+#tetrisHowBtn:hover { background: rgba(120,60,200,0.9); }
+
+#tetrisExitBtn {
+  background: #5e1a1a; color: #ffaaaa; border: 1px solid #993333;
+  border-radius: 8px; padding: 5px 13px;
+  font-family: monospace; font-size: 13px; font-weight: bold;
+  cursor: pointer; height: 30px;
+}
+#tetrisExitBtn:hover { background: #992222; color: #fff; }
+
+/* Инструкция */
+#tetrisInstr { background: rgba(14,7,30,0.97); border-bottom: 1px solid rgba(100,60,180,0.4); padding: 14px 20px; }
+#tetrisInstr.hidden { display: none; }
+#tetrisInstrContent { max-width: 420px; margin: 0 auto; }
+.tet-instr-title { font-family: monospace; font-size: 16px; font-weight: bold; color: #cc99ff; margin-bottom: 8px; }
+.tet-instr-list { font-family: monospace; font-size: 12px; color: #c0b0e0; line-height: 1.85; padding-left: 16px; margin: 0 0 10px; columns: 2; }
+.tet-instr-list li b { color: #ffdd88; }
+#tetrisInstrClose {
+  background: #2a4a2a; color: #88ff99; border: 1px solid #447744;
+  border-radius: 8px; padding: 7px 22px; font-family: monospace;
+  font-size: 14px; font-weight: bold; cursor: pointer; display: block; margin: 0 auto;
+}
+#tetrisInstrClose:hover { background: #3a6a3a; }
+
+/* Игровая зона */
+#tetrisBoardWrap {
+  display: flex; align-items: flex-start; padding: 12px; gap: 12px;
+  height: 560px; box-sizing: border-box; flex-shrink: 0;
+}
+#tetrisBoard {
+  display: block; image-rendering: pixelated;
+  border-radius: 4px; border: 2px solid rgba(90,50,170,0.7);
+  flex-shrink: 0; width: 260px; height: 520px;
+}
+
+/* Сайдбар */
+#tetrisSide {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; width: 150px; flex-shrink: 0;
+}
+.tet-side-label { font-family: monospace; font-size: 10px; color: #7755aa; text-transform: uppercase; letter-spacing: 1px; align-self: flex-start; }
+#tetrisNext, #tetrisHold {
+  display: block; image-rendering: pixelated;
+  border: 1px solid rgba(90,50,170,0.5); border-radius: 4px;
+  width: 72px; height: 72px;
+}
+#tetrisScore { font-family: monospace; font-size: 22px; color: #ffdd55; font-weight: bold; }
+#tetrisLines { font-family: monospace; font-size: 18px; color: #88ffaa; font-weight: bold; }
+#tetrisLevel { font-family: monospace; font-size: 18px; color: #cc99ff; font-weight: bold; }
+#tetrisBest { font-family: monospace; font-size: 11px; color: #7766aa; text-align: left; line-height: 1.7; width: 150px; margin-top: 8px; }
+#tetrisBest b { color: #aa88ee; display: block; margin-bottom: 2px; }
+.tet-row { display: block; color: #9988bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tet-no-results { color: #554466; font-style: italic; }
+#tetrisRetryBtn {
+  background: #1a3320; color: #77ee88; border: 1px solid #336644;
+  border-radius: 8px; padding: 7px 0; font-family: monospace; font-size: 12px;
+  font-weight: bold; cursor: pointer; width: 100%; margin-top: 6px;
+}
+#tetrisRetryBtn:hover { background: #254530; color: #ccffcc; }
