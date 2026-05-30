@@ -8,7 +8,7 @@
  * Боты — отдельный модуль решений, который НЕ внутри движка; в онлайне
  * их место займут сетевые игроки, движок не меняется.
  */
-import { createPokerEngine, estimateStrength, HAND_NAMES } from "./pokerEngine.js?v=poker-3";
+import { createPokerEngine, estimateStrength, HAND_NAMES } from "./pokerEngine.js?v=party-2";
 
 const BOT_DELAY = 800; // мс «раздумье» бота
 
@@ -206,8 +206,18 @@ export function createPoker(container, { onResult } = {}) {
     botTimer = setTimeout(() => {
       const s = engine.getState();
       if (!isBot(s.toAct)) { render(); return; }
-      const action = decideBotAction(engine);
-      engine.applyAction(action);
+      const before = s.toAct, stageBefore = s.stage;
+      engine.applyAction(decideBotAction(engine));
+      // Защита от зацикливания: если ход не сменился — форсим безопасное действие
+      const after = engine.getState();
+      if (after.toAct === before && after.stage === stageBefore &&
+          ["preflop","flop","turn","river"].includes(after.stage)) {
+        const legal = engine.legalActions();
+        const safe = legal.find(a => a.type === "check")
+                  || legal.find(a => a.type === "call")
+                  || legal.find(a => a.type === "fold");
+        if (safe) engine.applyAction({ type: safe.type, amount: safe.amount });
+      }
       render();
     }, BOT_DELAY);
   }

@@ -12,6 +12,8 @@ const FLEET = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]; // 10 кораблей, 20 кле�
 
 export function createBattleship(container, { mode, onGoldChange, onResult } = {}) {
   let player, enemy, turn, over, message;
+  let botTimer = null;
+  let destroyed = false;
 
   container.innerHTML = `
     <div class="bs-root">
@@ -50,8 +52,13 @@ export function createBattleship(container, { mode, onGoldChange, onResult } = {
   }
 
   // ── Игровая логика ────────────────────────────────────────────────────────
+  function scheduleBot() {
+    if (botTimer) clearTimeout(botTimer);
+    botTimer = setTimeout(() => { botTimer = null; if (!destroyed) enemyTurn(); }, 700);
+  }
+
   function playerShoot(x, y) {
-    if (over || turn !== "player") return;
+    if (destroyed || over || turn !== "player") return;
     const cell = enemy.grid[y][x];
     if (cell.shot) return; // уже стреляли
 
@@ -66,11 +73,11 @@ export function createBattleship(container, { mode, onGoldChange, onResult } = {
       turn = "enemy";
     }
     render();
-    if (turn === "enemy") setTimeout(enemyTurn, 700);
+    if (turn === "enemy") scheduleBot();
   }
 
   function enemyTurn() {
-    if (over) return;
+    if (over || destroyed) return;
     let res;
     do {
       const { x, y } = enemy_pickTarget();
@@ -86,7 +93,7 @@ export function createBattleship(container, { mode, onGoldChange, onResult } = {
       }
       render();
     } while (!over && turn === "enemy" && res.result !== "miss");
-    if (!over && turn === "enemy") setTimeout(enemyTurn, 700);
+    if (!over && turn === "enemy") scheduleBot();
   }
 
   // Бот: случайная неоткрытая клетка (+лёгкий добор после попадания)
@@ -153,7 +160,7 @@ export function createBattleship(container, { mode, onGoldChange, onResult } = {
     }
   }
 
-  return { destroy: () => {} };
+  return { destroy: () => { destroyed = true; if (botTimer) clearTimeout(botTimer); } };
 }
 
 // ── Доска и корабли ───────────────────────────────────────────────────────────
