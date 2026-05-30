@@ -12,7 +12,7 @@ import { createPokerEngine, estimateStrength, HAND_NAMES } from "./pokerEngine.j
 
 const BOT_DELAY = 800; // мс «раздумье» бота
 
-export function createPoker(container, { onResult } = {}) {
+export function createPoker(container, { onResult, openOnline } = {}) {
   let engine = null;
   let mode = null;       // "bot" | "local"
   let revealed = false;  // (local) показаны ли карты текущего игрока
@@ -33,14 +33,15 @@ export function createPoker(container, { onResult } = {}) {
         <div class="pk-mode-list">
           <button class="mg-btn mg-btn-big" id="pkModeBot">🤖 Против ботов <small>(ты + 4 бота)</small></button>
           <button class="mg-btn mg-btn-big" id="pkModeLocal">👥 На одном устройстве <small>(2–6 игроков)</small></button>
-          <button class="mg-btn mg-btn-big pk-mode-soon" id="pkModeOnline">🌐 Онлайн <small>(скоро)</small></button>
+          <button class="mg-btn mg-btn-big" id="pkModeOnline">🌐 Онлайн <small>(лобби)</small></button>
         </div>
         <div id="pkModeMsg" class="pk-mode-msg"></div>
       </div>`;
     root.querySelector("#pkModeBot").addEventListener("click", () => startBotGame());
     root.querySelector("#pkModeLocal").addEventListener("click", () => renderLocalSetup());
     root.querySelector("#pkModeOnline").addEventListener("click", () => {
-      root.querySelector("#pkModeMsg").textContent = "Онлайн-режим будет добавлен позже.";
+      if (openOnline) openOnline();
+      else root.querySelector("#pkModeMsg").textContent = "Онлайн недоступен.";
     });
   }
 

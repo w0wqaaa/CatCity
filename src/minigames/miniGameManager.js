@@ -5,7 +5,7 @@
 import { MINI_GAME_CONFIGS } from "./configs.js?v=party-4";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
-import { createPoker }      from "./poker.js?v=party-2";
+import { createPoker }      from "./poker.js?v=mp-1";
 import { createBattleship } from "./battleship.js?v=party-3";
 import { createBomberman }  from "./bomberman.js?v=party-3";
 import { createQuiz }       from "./quiz.js?v=party-3";
@@ -17,6 +17,8 @@ import { createMafia }       from "./mafia.js?v=party-4";
 import { createCTF }         from "./ctf.js?v=party-4";
 import { createTanksLite }   from "./tanksLite.js?v=party-4";
 import { createChess }       from "./chess.js?v=party-6";
+import { openLobby }         from "../net/lobby.js?v=mp-1";
+import { isOnline }          from "../net/online.js?v=mp-1";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
@@ -107,6 +109,7 @@ export function openMiniGame(modeId, context = {}) {
 export function closeMiniGame() {
   if (currentGame?.destroy) currentGame.destroy();
   currentGame = null;
+  if (currentLobby?.destroy) { currentLobby.destroy(); currentLobby = null; }
   if (overlay) overlay.classList.add("hidden");
   isOpen = false;
   const cb = currentCtx?.onClose;
@@ -152,9 +155,11 @@ function showModeSelect(config) {
       <button id="mgVsPvP" class="mg-btn mg-btn-big ${config.supportsPvP ? "" : "mg-btn-disabled"}" type="button">
         👥 Два игрока${config.supportsPvP ? "" : " <small>(скоро)</small>"}
       </button>
+      <button id="mgOnline" class="mg-btn mg-btn-big" type="button">🌐 Онлайн ${isOnline() ? "" : "<small>(нужен сервер)</small>"}</button>
     </div>`;
 
   bodyEl.querySelector("#mgVsBot").addEventListener("click", () => launchGame(config, "bot"));
+  bodyEl.querySelector("#mgOnline").addEventListener("click", () => showLobby(config));
 
   const pvpBtn = bodyEl.querySelector("#mgVsPvP");
   if (config.supportsPvP) {
@@ -164,7 +169,28 @@ function showModeSelect(config) {
   }
 }
 
-function launchGame(config, mode) {
+// ─── Онлайн-лобби ──────────────────────────────────────────────────────────────
+let currentLobby = null;
+
+function showLobby(config) {
+  if (currentGame?.destroy) { currentGame.destroy(); currentGame = null; }
+  if (currentLobby?.destroy) currentLobby.destroy();
+  msgEl.textContent = "";
+  currentLobby = openLobby(bodyEl, {
+    mode: config.id,
+    title: config.name,
+    onStart: ({ players, seed, myId }) => {
+      currentLobby = null;
+      launchGame(config, "online", { players, seed, myId });
+    },
+    onCancel: () => {
+      currentLobby = null;
+      showModeSelect(config);
+    },
+  });
+}
+
+function launchGame(config, mode, onlineInfo = null) {
   const factory = GAME_FACTORIES[config.id];
   if (!factory) {
     bodyEl.innerHTML = `<div class="mg-placeholder-text">Игра не реализована.</div>`;
@@ -200,6 +226,8 @@ function launchGame(config, mode) {
 
   currentGame = factory(gameArea, {
     mode,
+    online: onlineInfo,            // {players, seed, myId} для онлайн-режима
+    openOnline: () => showLobby(config),
     playerStats: currentCtx?.playerStats,
     onGoldChange: (delta) => {
       if (currentCtx?.onGoldChange) currentCtx.onGoldChange(delta);
@@ -208,6 +236,14 @@ function launchGame(config, mode) {
     },
     onResult: handleResult,
   });
+
+  // В онлайн-режиме показываем участников лобби
+  if (mode === "online" && onlineInfo) {
+    const info = document.createElement("div");
+    info.className = "mg-online-info";
+    info.textContent = "🌐 Онлайн: " + onlineInfo.players.map(p => p.name).join(", ");
+    bodyEl.appendChild(info);
+  }
 
   // Back to mode select (кроме игр со своим меню)
   if (!config.directLaunch) {

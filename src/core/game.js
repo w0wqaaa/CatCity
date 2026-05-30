@@ -25,7 +25,8 @@ import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
-import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=party-6";
+import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=mp-1";
+import { connectOnline, isOnline, getRemotePlayers, setPresenceHandler, sendMove as netSendMove, sendLocation as netSendLocation } from "../net/online.js?v=mp-1";
 import { initTouchControls, showTouchControls, hideTouchControls } from "../ui/touchControls.js?v=mobile-1";
 
 const SAVE_VERSION = 1;
@@ -98,6 +99,7 @@ let tetrisGameResults = [];
 let equipment = { head: null, body: null, weapon: null, offhand: null, belt: null, legs: null, amulet: null };
 let hotbar = { 1: null, 2: null, 3: null }; // item IDs для быстрых слотов
 let miniGameStats = {};
+let lastNetMoveAt = 0;
 let seenLocationGuides = {};
 let playerCharacter = "boy";
 let loadedPlayerCharacter = null;
@@ -354,6 +356,14 @@ async function login(username) {
   await switchLocation(currentLocationId, getSavedSpawn(), { skipSave: true });
   showNotification(`Добро пожаловать, ${username}`);
 
+  // Онлайн-присутствие (fail-safe: при недоступности сервера — одиночный режим)
+  connectOnline({
+    name: username,
+    character: playerCharacter,
+    location: currentLocationId,
+    x: Math.round(cat.x), y: Math.round(cat.y), dir: cat.direction,
+  });
+
   // Показываем туториал при первом входе
   if (maybeShowTutorial(username)) {
     markTutorialSeen(username);
@@ -437,6 +447,11 @@ async function switchLocation(locationId, spawnOverride = null, options = {}) {
     isTransitioning = false;
     showLocationGuideIfNeeded(content.location.id);
   }, 250);
+
+  // Сообщаем серверу о смене локации (если онлайн)
+  if (isOnline() && currentUser) {
+    netSendLocation(locationId, Math.round(cat.x), Math.round(cat.y), cat.direction);
+  }
 }
 
 function showLocationGuideIfNeeded(locationId) {
@@ -1840,6 +1855,7 @@ function update() {
       cat.frame = (cat.frame + 1) % 3;
     }
     autosaveProgress();
+    maybeSendNetMove();
   } else {
     cat.frame = 0;
   }
@@ -1866,6 +1882,40 @@ function update() {
   checkLocationExits();
 }
 
+function maybeSendNetMove() {
+  if (!isOnline()) return;
+  const now = Date.now();
+  if (now - lastNetMoveAt < 80) return; // ~12 раз/сек
+  lastNetMoveAt = now;
+  netSendMove(Math.round(cat.x), Math.round(cat.y), cat.direction);
+}
+
+// Рисуем других игроков как полупрозрачных котов с ником
+function drawRemotePlayers() {
+  if (!isOnline() || !playerFrames) return;
+  const others = getRemotePlayers();
+  for (const rp of others) {
+    const ghost = {
+      x: rp.x, y: rp.y, scale: 2, direction: rp.dir || "down",
+      frame: 0, moving: false, attacking: false, attackFrame: 0, attackTicks: 0,
+    };
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    drawPlayerSprite(ctx, ghost, playerFrames);
+    ctx.restore();
+    // ник
+    ctx.save();
+    ctx.font = "bold 12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#7dfff1";
+    ctx.strokeStyle = "rgba(0,0,0,0.85)";
+    ctx.lineWidth = 3;
+    ctx.strokeText(rp.name || "?", rp.x, rp.y - 28);
+    ctx.fillText(rp.name || "?", rp.x, rp.y - 28);
+    ctx.restore();
+  }
+}
+
 function draw() {
   if (!cat || !mapBackground) {
     return;
@@ -1876,6 +1926,7 @@ function draw() {
   drawObjects();
   mobs.forEach((mob) => mob.draw(ctx));
   npcs.forEach((npc) => npc.draw(ctx));
+  drawRemotePlayers();
 
   drawPlayerSprite(ctx, cat, playerFrames);
 

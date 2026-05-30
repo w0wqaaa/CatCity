@@ -2138,3 +2138,21 @@ button {
 .ch-move{box-shadow:inset 0 0 0 3px rgba(80,200,120,0.7)}
 .ch-w{color:#fff;text-shadow:0 0 2px #000}
 .ch-b{color:#111}
+
+/* ═══ Онлайн-лобби ═══ */
+.lb-root{font-family:monospace;width:360px;max-width:calc(100vw - 40px);text-align:center}
+.lb-wait{padding:14px}
+.lb-title{font-size:17px;font-weight:bold;color:#cc99ff;margin-bottom:10px}
+.lb-spinner{font-size:13px;color:#9988cc;padding:20px}
+.lb-count{font-size:13px;color:#ffdd55;margin-bottom:10px}
+.lb-players{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.lb-player{background:rgba(40,25,70,0.5);border:1px solid rgba(90,55,160,0.4);border-radius:7px;padding:8px 12px;font-size:13px;color:#d8c8ff}
+.lb-player.lb-me{border-color:#7dfff1}
+.lb-player.lb-host{background:rgba(80,60,30,0.4)}
+.lb-hint{font-size:12px;color:#aabbff;margin-bottom:12px;min-height:16px}
+.lb-controls{display:flex;flex-direction:column;gap:8px;align-items:center}
+.lb-offline{text-align:center;padding:20px}
+.lb-off-icon{font-size:44px;margin-bottom:10px}
+.lb-off-title{font-size:17px;color:#cc99ff;font-weight:bold;margin-bottom:8px}
+.lb-off-text{font-size:13px;color:#b0a0d0;line-height:1.6;margin-bottom:14px}
+.mg-online-info{font-family:monospace;font-size:11px;color:#7dfff1;text-align:center;margin-top:8px;padding:6px;background:rgba(20,40,40,0.4);border-radius:6px}
