@@ -25,7 +25,7 @@ import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
-import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=party-3";
+import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=party-6";
 import { initTouchControls, showTouchControls, hideTouchControls } from "../ui/touchControls.js?v=mobile-1";
 
 const SAVE_VERSION = 1;

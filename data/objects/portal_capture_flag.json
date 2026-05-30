@@ -4,7 +4,7 @@
   "type": "portal",
   "position": { "x": 768, "y": 760 },
   "marker": { "x": 768, "y": 696 },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
@@ -12,7 +12,7 @@
   "interactable": true,
   "actionType": "portal",
   "targetMode": "capture_the_flag",
-  "locked": true,
+  "locked": false,
   "lockedMessage": "Портал пока нестабилен.",
   "description": "Захват флага. Скоро."
 }

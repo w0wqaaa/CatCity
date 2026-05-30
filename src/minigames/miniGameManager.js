@@ -2,13 +2,21 @@
  * Mini-Game Manager
  * Central router for all mini-games via targetMode.
  */
-import { MINI_GAME_CONFIGS } from "./configs.js?v=party-3";
+import { MINI_GAME_CONFIGS } from "./configs.js?v=party-4";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
 import { createPoker }      from "./poker.js?v=party-2";
 import { createBattleship } from "./battleship.js?v=party-3";
 import { createBomberman }  from "./bomberman.js?v=party-3";
 import { createQuiz }       from "./quiz.js?v=party-3";
+import { createMinesweeper } from "./minesweeper.js?v=party-4";
+import { createDice }        from "./dice.js?v=party-4";
+import { createSokoban }     from "./sokoban.js?v=party-4";
+import { createTron }        from "./tron.js?v=party-4";
+import { createMafia }       from "./mafia.js?v=party-4";
+import { createCTF }         from "./ctf.js?v=party-4";
+import { createTanksLite }   from "./tanksLite.js?v=party-4";
+import { createChess }       from "./chess.js?v=party-6";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
@@ -18,6 +26,14 @@ const GAME_FACTORIES = {
   battleship:  createBattleship,
   bomberman_lite: createBomberman,
   quiz:           createQuiz,
+  minesweeper:      createMinesweeper,
+  dice_combo:       createDice,
+  sokoban:          createSokoban,
+  tron_duel:        createTron,
+  mafia:            createMafia,
+  capture_the_flag: createCTF,
+  tanks_lite:       createTanksLite,
+  chess:            createChess,
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────

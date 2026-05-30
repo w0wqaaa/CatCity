@@ -37,8 +37,16 @@ export const MINI_GAME_CONFIGS = {
     supportsPvP: false,
   },
   chess: {
-    id: "chess", name: "Шахматы", emoji: "♟️", status: "placeholder",
-    description: "Шахматное измерение. Будет добавлено позже.",
+    id: "chess", name: "Шахматы", emoji: "♟️", status: "active",
+    description: "Шахматы против бота. Ты играешь белыми.",
+    rules: [
+      "Ты играешь белыми, бот — чёрными.",
+      "Кликни свою фигуру — подсветятся доступные ходы, кликни клетку.",
+      "Все фигуры ходят по правилам, пешка превращается в ферзя.",
+      "Партия завершается взятием короля.",
+      "Награда: победа над ботом +15💰.",
+    ],
+    rewards: { win: 15, draw: 0, lose: 0 }, supportsPvP: false,
   },
   checkers: {
     id: "checkers", name: "Шашки", emoji: "⚫", status: "placeholder",
@@ -49,20 +57,43 @@ export const MINI_GAME_CONFIGS = {
     description: "Четыре в ряд. Будет добавлено позже.",
   },
   minesweeper: {
-    id: "minesweeper", name: "Сапёр", emoji: "💣", status: "placeholder",
-    description: "Разминируй поле. Будет добавлено позже.",
+    id: "minesweeper", name: "Сапёр", emoji: "💣", status: "active",
+    description: "Классический сапёр 9×9 с 10 минами.",
+    rules: [
+      "Поле 9×9, спрятано 10 мин.",
+      "Левый клик — открыть клетку. Правый клик — поставить флаг.",
+      "Число показывает, сколько мин рядом.",
+      "Открой все безопасные клетки, не подорвись!",
+      "Награда: победа +10💰.",
+    ],
+    rewards: { win: 10, draw: 0, lose: 0 }, supportsPvP: false,
   },
   sokoban: {
-    id: "sokoban", name: "Sokoban", emoji: "📦", status: "placeholder",
-    description: "Толкай ящики на правильные места. Будет добавлено позже.",
+    id: "sokoban", name: "Sokoban", emoji: "📦", status: "active",
+    description: "Толкай ящики на цели. Несколько уровней.",
+    rules: [
+      "WASD или стрелки — двигай кота.",
+      "Толкай ящики 📦 на цели ◎ (ящик нельзя тянуть).",
+      "Заполни все цели, чтобы пройти уровень. R — сброс.",
+      "Награда: пройди все уровни +5💰.",
+    ],
+    rewards: { win: 5, draw: 0, lose: 0 }, supportsPvP: false,
   },
   pipe_puzzle: {
     id: "pipe_puzzle", name: "Pipe Puzzle", emoji: "🔧", status: "placeholder",
     description: "Соедини трубы. Будет добавлено позже.",
   },
   dice_combo: {
-    id: "dice_combo", name: "Кости", emoji: "🎲", status: "placeholder",
-    description: "Кубики-комбо. Будет добавлено позже.",
+    id: "dice_combo", name: "Кости", emoji: "🎲", status: "active",
+    description: "Покер на костях против бота. 5 кубиков, 3 броска.",
+    rules: [
+      "5 кубиков, до 3 бросков за раунд.",
+      "Кликай кубики, чтобы оставить нужные, остальные перебрасывай.",
+      "Собери лучшую комбинацию (пара … покер).",
+      "У кого комбинация сильнее — выиграл.",
+      "Награда: победа +6💰.",
+    ],
+    rewards: { win: 6, draw: 0, lose: 0 }, supportsPvP: false,
   },
   wheel_of_fortune: {
     id: "wheel_of_fortune", name: "Колесо удачи", emoji: "🎡", status: "placeholder",
@@ -73,8 +104,16 @@ export const MINI_GAME_CONFIGS = {
     description: "Защищай базу. Будет добавлено позже.",
   },
   tron_duel: {
-    id: "tron_duel", name: "Tron Duel", emoji: "⚡", status: "placeholder",
-    description: "Гонка на световых мотоциклах. Будет добавлено позже.",
+    id: "tron_duel", name: "Tron Duel", emoji: "⚡", status: "active",
+    description: "Световые мотоциклы. Ты против бота — не врежься в след.",
+    rules: [
+      "WASD / стрелки — поворот мотоцикла.",
+      "За тобой тянется след — он смертелен.",
+      "Заставь бота врезаться раньше тебя.",
+      "Нельзя поворачивать назад в свой след.",
+      "Награда: победа +8💰.",
+    ],
+    rewards: { win: 8, draw: 0, lose: 0 }, supportsPvP: false,
   },
   snake_duel: {
     id: "snake_duel", name: "Snake Duel", emoji: "🐍", status: "placeholder",
@@ -132,8 +171,16 @@ export const MINI_GAME_CONFIGS = {
     supportsPvP: false,
   },
   mafia: {
-    id: "mafia", name: "Измерение подозрений", emoji: "🕵️", status: "placeholder",
-    description: "Мафия с ботами. Будет добавлено позже.",
+    id: "mafia", name: "Измерение подозрений", emoji: "🕵️", status: "active",
+    description: "Мафия-дедукция. Вычисли мафию по показаниям.",
+    rules: [
+      "Один из 5 котов — мафия.",
+      "Невиновные говорят правду, мафия лжёт.",
+      "Изучи показания и вычисли, кто лжёт.",
+      "Обвини правильного — поймаешь мафию.",
+      "Награда: верное обвинение +10💰.",
+    ],
+    rewards: { win: 10, draw: 0, lose: 0 }, supportsPvP: false,
   },
   quiz: {
     id: "quiz", name: "Храм знаний", emoji: "❓", status: "active",
@@ -148,11 +195,27 @@ export const MINI_GAME_CONFIGS = {
     supportsPvP: false,
   },
   capture_the_flag: {
-    id: "capture_the_flag", name: "Арена флагов", emoji: "🚩", status: "placeholder",
-    description: "Захват флага. Будет добавлено позже.",
+    id: "capture_the_flag", name: "Арена флагов", emoji: "🚩", status: "active",
+    description: "Захват флага. Принеси 3 флага врага на свою базу.",
+    rules: [
+      "WASD / стрелки — движение.",
+      "Забери флаг 🚩 справа и неси на свою базу 🏠 слева.",
+      "Бот-преследователь ловит — теряешь флаг.",
+      "Доставь 3 флага, чтобы победить.",
+      "Награда: победа +8💰.",
+    ],
+    rewards: { win: 8, draw: 0, lose: 0 }, supportsPvP: false,
   },
   tanks_lite: {
-    id: "tanks_lite", name: "Полигон древних машин", emoji: "🔫", status: "placeholder",
-    description: "Танчики Lite. Будет добавлено позже.",
+    id: "tanks_lite", name: "Полигон древних машин", emoji: "🔫", status: "active",
+    description: "Танковый бой против 2 ботов.",
+    rules: [
+      "WASD / стрелки — движение, Space — выстрел.",
+      "Прячься за укрытиями, разрушай кирпичи выстрелами.",
+      "Уничтожь оба вражеских танка.",
+      "Не попади под их огонь!",
+      "Награда: победа +8💰.",
+    ],
+    rewards: { win: 8, draw: 0, lose: 0 }, supportsPvP: false,
   },
 };

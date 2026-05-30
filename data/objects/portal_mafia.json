@@ -4,7 +4,7 @@
   "type": "portal",
   "position": { "x": 1112, "y": 288 },
   "marker": { "x": 1112, "y": 224 },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
@@ -12,7 +12,7 @@
   "interactable": true,
   "actionType": "portal",
   "targetMode": "mafia",
-  "locked": true,
+  "locked": false,
   "lockedMessage": "Портал пока нестабилен.",
   "description": "Мафия с ботами. Скоро."
 }
