@@ -14,7 +14,8 @@
     "portal_mines",
     "portal_cyber",
     "portal_puzzle",
-    "portal_luck"
+    "portal_luck",
+    "portal_to_valley3"
   ],
   "items": [],
   "spawn": {

@@ -1,0 +1,18 @@
+{
+  "id": "portal_bomberman",
+  "name": "Взрывное измерение",
+  "type": "portal",
+  "position": { "x": 768, "y": 224 },
+  "marker": { "x": 768, "y": 160 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "bomberman_lite",
+  "locked": true,
+  "lockedMessage": "Портал пока нестабилен.",
+  "description": "Bomberman Lite. Скоро."
+}

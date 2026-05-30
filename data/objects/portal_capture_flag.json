@@ -1,0 +1,18 @@
+{
+  "id": "portal_capture_flag",
+  "name": "Арена флагов",
+  "type": "portal",
+  "position": { "x": 768, "y": 760 },
+  "marker": { "x": 768, "y": 696 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "capture_the_flag",
+  "locked": true,
+  "lockedMessage": "Портал пока нестабилен.",
+  "description": "Захват флага. Скоро."
+}

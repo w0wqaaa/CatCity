@@ -2,16 +2,18 @@
  * Mini-Game Manager
  * Central router for all mini-games via targetMode.
  */
-import { MINI_GAME_CONFIGS } from "./configs.js?v=poker-3";
+import { MINI_GAME_CONFIGS } from "./configs.js?v=party-1";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
 import { createPoker }      from "./poker.js?v=poker-3";
+import { createBattleship } from "./battleship.js?v=party-1";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
   tic_tac_toe: createTicTacToe,
   blackjack:   createBlackjack,
   poker_lite:  createPoker,
+  battleship:  createBattleship,
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────

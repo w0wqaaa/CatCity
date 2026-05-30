@@ -1,0 +1,13 @@
+{
+  "id": "portal_w3_back",
+  "name": "Вернуться в Долину II",
+  "type": "portal",
+  "position": { "x": 768, "y": 900 },
+  "marker": { "x": 768, "y": 836 },
+  "sprite": "assets/objects/portals/portal_green_active.png",
+  "width": 64, "height": 72, "collision": false, "radius": 105,
+  "interactable": true, "actionType": "portal",
+  "targetLocationId": "portal_world_2", "locked": false,
+  "spawn": { "x": 768, "y": 600, "direction": "up" },
+  "description": "Портал возвращает во вторую долину."
+}

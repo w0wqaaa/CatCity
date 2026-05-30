@@ -1992,3 +1992,37 @@ button {
 .pk-mode-msg { margin-top: 10px; font-size: 12px; color: #ffdd55; min-height: 16px; }
 .pk-thinking { font-family: monospace; font-size: 14px; color: #aabbff; padding: 8px; }
 .pk-opp-turn { border-color: #ffcc44 !important; box-shadow: 0 0 8px rgba(255,200,60,0.4); }
+
+/* ═══════════════════════════════════════════
+   BATTLESHIP (Морской бой)
+   ═══════════════════════════════════════════ */
+.bs-root { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.bs-status { font-family: monospace; font-size: 14px; color: #ffdd55; min-height: 20px; text-align: center; font-weight: bold; }
+.bs-boards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+.bs-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bs-label { font-family: monospace; font-size: 11px; color: #9988cc; }
+.bs-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 22px);
+  grid-template-rows: repeat(10, 22px);
+  gap: 1px;
+  background: rgba(80,50,150,0.3);
+  padding: 2px;
+  border-radius: 4px;
+}
+.bs-cell {
+  width: 22px; height: 22px;
+  background: rgba(30,40,80,0.85);
+  border: 1px solid rgba(70,90,150,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-family: monospace; font-size: 13px; font-weight: bold;
+  box-sizing: border-box;
+}
+.bs-own .bs-cell { background: rgba(25,30,60,0.85); }
+.bs-ship  { background: #5a6a8a !important; border-color: #8899bb !important; }
+.bs-miss  { color: #6699cc; }
+.bs-hit   { background: rgba(200,80,40,0.85) !important; color: #ffddaa; }
+.bs-sunk  { background: rgba(140,30,30,0.95) !important; color: #ffaaaa; }
+.bs-target { cursor: crosshair; }
+.bs-target:hover { background: rgba(80,120,180,0.9); }
+.bs-controls { display: flex; gap: 8px; margin-top: 4px; }

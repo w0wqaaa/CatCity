@@ -1,0 +1,24 @@
+{
+  "id": "portal_world_3",
+  "name": "Долина порталов III",
+  "map": "assets/maps/lost_portal_valley/background.png",
+  "collisionMap": "src/maps/lostPortalValleyCollisionMap.js",
+  "characters": [],
+  "quests": [],
+  "objects": [
+    "portal_w3_back",
+    "portal_battleship",
+    "portal_bomberman",
+    "portal_mafia",
+    "portal_quiz",
+    "portal_capture_flag",
+    "portal_tanks"
+  ],
+  "items": [],
+  "spawn": {
+    "x": 768,
+    "y": 850,
+    "direction": "up"
+  },
+  "exits": []
+}

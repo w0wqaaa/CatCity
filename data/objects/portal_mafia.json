@@ -1,0 +1,18 @@
+{
+  "id": "portal_mafia",
+  "name": "Измерение подозрений",
+  "type": "portal",
+  "position": { "x": 1112, "y": 288 },
+  "marker": { "x": 1112, "y": 224 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "mafia",
+  "locked": true,
+  "lockedMessage": "Портал пока нестабилен.",
+  "description": "Мафия с ботами. Скоро."
+}

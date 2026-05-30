@@ -103,4 +103,39 @@ export const MINI_GAME_CONFIGS = {
     id: "memory_cards", name: "Memory Cards", emoji: "🧠", status: "placeholder",
     description: "Найди пары карточек. Будет добавлено позже.",
   },
+
+  // ── Компанейские игры (Долина III) ──
+  battleship: {
+    id: "battleship", name: "Морской бой", emoji: "🚢", status: "active",
+    description: "Потопи весь флот врага на поле 10×10. Игра против бота.",
+    rules: [
+      "Поле 10×10. Корабли расставляются автоматически.",
+      "Кликай по полю врага, чтобы выстрелить.",
+      "Попал — стреляешь ещё раз. Промах — ходит враг.",
+      "Уничтожь все корабли врага: 1×4, 2×3, 3×2, 4×1.",
+      "Награда: победа +10💰.",
+    ],
+    rewards:     { win: 10, draw: 0, lose: 0 },
+    supportsPvP: false,
+  },
+  bomberman_lite: {
+    id: "bomberman_lite", name: "Взрывное измерение", emoji: "💣", status: "placeholder",
+    description: "Bomberman Lite. Будет добавлено позже.",
+  },
+  mafia: {
+    id: "mafia", name: "Измерение подозрений", emoji: "🕵️", status: "placeholder",
+    description: "Мафия с ботами. Будет добавлено позже.",
+  },
+  quiz: {
+    id: "quiz", name: "Храм знаний", emoji: "❓", status: "placeholder",
+    description: "Викторина. Будет добавлено позже.",
+  },
+  capture_the_flag: {
+    id: "capture_the_flag", name: "Арена флагов", emoji: "🚩", status: "placeholder",
+    description: "Захват флага. Будет добавлено позже.",
+  },
+  tanks_lite: {
+    id: "tanks_lite", name: "Полигон древних машин", emoji: "🔫", status: "placeholder",
+    description: "Танчики Lite. Будет добавлено позже.",
+  },
 };

@@ -1,0 +1,18 @@
+{
+  "id": "portal_tanks",
+  "name": "Полигон древних машин",
+  "type": "portal",
+  "position": { "x": 1112, "y": 712 },
+  "marker": { "x": 1112, "y": 648 },
+  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "width": 64,
+  "height": 72,
+  "collision": false,
+  "radius": 105,
+  "interactable": true,
+  "actionType": "portal",
+  "targetMode": "tanks_lite",
+  "locked": true,
+  "lockedMessage": "Портал пока нестабилен.",
+  "description": "Танчики Lite. Скоро."
+}

@@ -7,7 +7,7 @@ import { NPCGuard } from "../entities/NPCGuard.js?v=spritesheet-combat-1";
 import { Mob } from "../entities/Mob.js?v=spritesheet-combat-1";
 import { initMinimap, isMinimapEnabled, toggleMinimap, updateMinimap } from "../ui/minimap.js?v=minigames-2";
 import { initControlLegend, updateControlLegend } from "../ui/controlLegend.js?v=minigames-1";
-import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=location-guide-1";
+import { closeLocationGuide, initLocationGuide, isLocationGuideOpen, openLocationGuide } from "../ui/locationGuide.js?v=party-1";
 import { initRunTimer, showRunResults, updateRunTimer } from "../ui/runTimer.js?v=run-timer-1";
 import { renderInventoryGrid, renderEquipmentPanel, renderHotbar, renderInventoryList, renderPlayerStats, renderQuestList, getItemIcon } from "../ui/uiManager.js?v=hotbar-1";
 import { attackFirstMob, canAttack, damagePlayer as applyPlayerDamage, getAttackBox as buildAttackBox, getMobBox, killMob, rectanglesOverlap, restorePlayerAfterDeath } from "../systems/combatSystem.js";
@@ -25,7 +25,7 @@ import { initTetrisGame, isTetrisOpen, openTetrisGame, getTetrisResults } from "
 import { initTankGame, isTankOpen, openTankGame, getTankResults } from "../ui/tankGame.js";
 import { initSnakeGame, isSnakeOpen, openSnakeGame, getSnakeResults } from "../ui/snakeGame.js";
 import { initTutorialGuide, isTutorialOpen, openTutorial, maybeShowTutorial, markTutorialSeen } from "../ui/tutorialGuide.js";
-import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=poker-3";
+import { initMiniGameManager, isMiniGameOpen, openMiniGame, closeMiniGame } from "../minigames/miniGameManager.js?v=party-1";
 import { initTouchControls, showTouchControls, hideTouchControls } from "../ui/touchControls.js?v=mobile-1";
 
 const SAVE_VERSION = 1;
@@ -2140,6 +2140,8 @@ const PORTAL_ID_LABELS = {
   portal_battle_arena:       "🌀 Долина II",
   portal_back_to_city:       "🏙️ В город",
   portal_w2_back:            "⬅️ Долина I",
+  portal_w3_back:            "⬅️ Долина II",
+  portal_to_valley3:         "🌀 Долина III",
   portal_echo_maze_entrance: "🚪 Выйти",
 };
 
@@ -2152,6 +2154,12 @@ const MODE_LABELS = {
   sokoban:     "📦 Головоломки",
   tron_duel:   "⚡ Кибер",
   dice_combo:  "🎲 Удача",
+  battleship:       "🚢 Морской бой",
+  bomberman_lite:   "💣 Бомбермен",
+  mafia:            "🕵️ Мафия",
+  quiz:             "❓ Викторина",
+  capture_the_flag: "🚩 Флаги",
+  tanks_lite:       "🔫 Танчики",
 };
 
 function getPortalLabel(object) {
