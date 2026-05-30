@@ -398,4 +398,37 @@ function compareRank(a, b) {
   return 0;
 }
 
+// ─── Оценка силы руки для ботов (0..1) ──────────────────────────────────────
+/** Лучшая комбинация из 5/6/7 карт */
+function bestRank(cards) {
+  if (cards.length === 5) return rank5(cards);
+  if (cards.length === 6) {
+    let best = null;
+    for (let skip = 0; skip < 6; skip++) {
+      const five = cards.filter((_, i) => i !== skip);
+      const r = rank5(five);
+      if (!best || compareRank(r, best) > 0) best = r;
+    }
+    return best;
+  }
+  return evaluate7(cards); // 7
+}
+
+export function estimateStrength(hole, community) {
+  if (community.length >= 3) {
+    const r = bestRank([...hole, ...community]);
+    // категория 0..9 → 0..1, плюс лёгкий вклад старшинства
+    return Math.min(1, r[0] / 8 + ((r[1] || 0) / 14) * 0.08);
+  }
+  // Префлоп: эвристика по двум картам
+  const v1 = RANK_VAL[hole[0].rank], v2 = RANK_VAL[hole[1].rank];
+  const hi = Math.max(v1, v2), lo = Math.min(v1, v2);
+  let s = (hi + lo) / 32;                 // база
+  if (v1 === v2) s += 0.30;               // пара
+  if (hole[0].suit === hole[1].suit) s += 0.06; // одномастные
+  if (hi - lo === 1) s += 0.04;           // коннекторы
+  if (hi >= 13) s += 0.06;                // туз/король
+  return Math.min(1, s);
+}
+
 export { HAND_NAMES };

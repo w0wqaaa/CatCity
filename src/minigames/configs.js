@@ -93,7 +93,7 @@ export const MINI_GAME_CONFIGS = {
     ],
     rewards:     { win: 0, draw: 0, lose: 0 },
     supportsPvP: true,
-    pvpOnly:     true,
+    directLaunch: true,
   },
   durak_lite: {
     id: "durak_lite", name: "Дурак", emoji: "🃏", status: "placeholder",

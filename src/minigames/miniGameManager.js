@@ -2,10 +2,10 @@
  * Mini-Game Manager
  * Central router for all mini-games via targetMode.
  */
-import { MINI_GAME_CONFIGS } from "./configs.js?v=poker-2";
+import { MINI_GAME_CONFIGS } from "./configs.js?v=poker-3";
 import { createTicTacToe }  from "./ticTacToe.js";
 import { createBlackjack }  from "./blackjack.js";
-import { createPoker }      from "./poker.js?v=poker-2";
+import { createPoker }      from "./poker.js?v=poker-3";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
@@ -70,6 +70,12 @@ export function openMiniGame(modeId, context = {}) {
 
   if (config.status === "placeholder") {
     showPlaceholder(config);
+    return;
+  }
+
+  // Игры со своим внутренним меню режимов (например, покер)
+  if (config.directLaunch) {
+    launchGame(config, "custom");
     return;
   }
 
@@ -181,16 +187,18 @@ function launchGame(config, mode) {
     onResult: handleResult,
   });
 
-  // Back to mode select
-  const backBtn = document.createElement("button");
-  backBtn.className = "mg-btn";
-  backBtn.textContent = "← Назад";
-  backBtn.style.marginTop = "8px";
-  backBtn.addEventListener("click", () => {
-    if (currentGame?.destroy) currentGame.destroy();
-    currentGame = null;
-    msgEl.textContent = "";
-    showModeSelect(config);
-  });
-  bodyEl.appendChild(backBtn);
+  // Back to mode select (кроме игр со своим меню)
+  if (!config.directLaunch) {
+    const backBtn = document.createElement("button");
+    backBtn.className = "mg-btn";
+    backBtn.textContent = "← Назад";
+    backBtn.style.marginTop = "8px";
+    backBtn.addEventListener("click", () => {
+      if (currentGame?.destroy) currentGame.destroy();
+      currentGame = null;
+      msgEl.textContent = "";
+      showModeSelect(config);
+    });
+    bodyEl.appendChild(backBtn);
+  }
 }
