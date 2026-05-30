@@ -3,7 +3,7 @@
  * Central router for all mini-games via targetMode.
  */
 import { MINI_GAME_CONFIGS } from "./configs.js?v=party-4";
-import { createTicTacToe }  from "./ticTacToe.js";
+import { createTicTacToe }  from "./ticTacToe.js?v=mp-2";
 import { createBlackjack }  from "./blackjack.js";
 import { createPoker }      from "./poker.js?v=mp-1";
 import { createBattleship } from "./battleship.js?v=party-3";
@@ -18,7 +18,7 @@ import { createCTF }         from "./ctf.js?v=party-4";
 import { createTanksLite }   from "./tanksLite.js?v=party-4";
 import { createChess }       from "./chess.js?v=party-6";
 import { openLobby }         from "../net/lobby.js?v=mp-1";
-import { isOnline }          from "../net/online.js?v=mp-1";
+import { isOnline, sendGame, onGameMessage } from "../net/online.js?v=mp-1";
 
 // ── Factories ─────────────────────────────────────────────────────────────────
 const GAME_FACTORIES = {
@@ -226,7 +226,7 @@ function launchGame(config, mode, onlineInfo = null) {
 
   currentGame = factory(gameArea, {
     mode,
-    online: onlineInfo,            // {players, seed, myId} для онлайн-режима
+    online: onlineInfo ? { ...onlineInfo, sendGame, onGameMessage } : null,
     openOnline: () => showLobby(config),
     playerStats: currentCtx?.playerStats,
     onGoldChange: (delta) => {

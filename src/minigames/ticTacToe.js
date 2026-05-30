@@ -9,19 +9,37 @@ const W = 300;
 const H = 300;
 const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-export function createTicTacToe(container, { mode, onResult }) {
-  // mode: "bot" | "pvp"
+export function createTicTacToe(container, { mode, onResult, online }) {
+  // mode: "bot" | "pvp" | "online"
   let board  = Array(9).fill(null); // null | "X" | "O"
   let current = "X";
   let over   = false;
   let botSymbol = mode === "bot" ? "O" : null;
+
+  // ── Онлайн (2 игрока по сети) ──
+  const isNet = mode === "online" && online;
+  let mySymbol = null, unsubNet = null, isHost = false;
+  if (isNet) {
+    isHost = online.players[0]?.id === online.myId;
+    mySymbol = isHost ? "X" : "O";  // хост ходит первым (X)
+    unsubNet = online.onGameMessage((m) => {
+      const d = m.data || {};
+      if (d.mv !== undefined && !over && board[d.mv] == null && current !== mySymbol) {
+        makeMove(d.mv, current, true);
+      } else if (d.restart && over) {
+        doReset(true);
+      }
+    });
+  }
 
   // ── DOM ────────────────────────────────────────────────────────────────────
   container.innerHTML = "";
 
   const statusEl = document.createElement("div");
   statusEl.className = "mg-status";
-  statusEl.textContent = mode === "bot" ? "Ты ходишь первым (X)" : "Ход: X";
+  statusEl.textContent = mode === "bot" ? "Ты ходишь первым (X)"
+    : (mode === "online" && online) ? (online.players[0]?.id === online.myId ? "Твой ход (X)" : "Ход соперника…")
+    : "Ход: X";
 
   const canvas = document.createElement("canvas");
   canvas.width  = W;
@@ -44,6 +62,7 @@ export function createTicTacToe(container, { mode, onResult }) {
   canvas.addEventListener("click", (e) => {
     if (over) return;
     if (mode === "bot" && current === botSymbol) return;
+    if (isNet && current !== mySymbol) return; // не твой ход
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (W / rect.width);
     const y = (e.clientY - rect.top)  * (H / rect.height);
@@ -51,11 +70,12 @@ export function createTicTacToe(container, { mode, onResult }) {
     const row = Math.floor(y / CELL_SIZE);
     const idx = row * 3 + col;
     if (col < 0 || col > 2 || row < 0 || row > 2 || board[idx]) return;
+    if (isNet) online.sendGame({ mv: idx });
     makeMove(idx, current);
   });
 
   // ── Logic ──────────────────────────────────────────────────────────────────
-  function makeMove(idx, symbol) {
+  function makeMove(idx, symbol, fromNet = false) {
     board[idx] = symbol;
     draw();
     const winner = checkWinner();
@@ -70,6 +90,8 @@ export function createTicTacToe(container, { mode, onResult }) {
     current = current === "X" ? "O" : "X";
     if (mode === "pvp") {
       statusEl.textContent = `Ход: ${current}`;
+    } else if (isNet) {
+      statusEl.textContent = current === mySymbol ? `Твой ход (${mySymbol})` : "Ход соперника…";
     } else {
       statusEl.textContent = current === botSymbol ? "Бот думает..." : "Твой ход (X)";
       if (current === botSymbol) {
@@ -115,11 +137,15 @@ export function createTicTacToe(container, { mode, onResult }) {
 
   function finalize(winner) {
     over = true;
-    restartBtn.style.display = "inline-block";
+    // В онлайне рестарт инициирует только хост
+    restartBtn.style.display = (isNet && !isHost) ? "none" : "inline-block";
     let result, msg;
     if (!winner) {
       result = "draw";
       msg = "Ничья!";
+    } else if (isNet) {
+      result = winner === mySymbol ? "win" : "lose";
+      msg = winner === mySymbol ? "🏆 Ты выиграл!" : "💀 Соперник выиграл.";
     } else if (mode === "pvp") {
       result = "win";
       msg = `Победил ${winner}!`;
@@ -136,11 +162,18 @@ export function createTicTacToe(container, { mode, onResult }) {
   }
 
   function restart() {
+    if (isNet) online.sendGame({ restart: true });
+    doReset(false);
+  }
+
+  function doReset() {
     board   = Array(9).fill(null);
     current = "X";
     over    = false;
     restartBtn.style.display = "none";
-    statusEl.textContent = mode === "bot" ? "Ты ходишь первым (X)" : "Ход: X";
+    statusEl.textContent = mode === "bot" ? "Ты ходишь первым (X)"
+      : isNet ? (mySymbol === "X" ? `Твой ход (X)` : "Ход соперника…")
+      : "Ход: X";
     draw();
     onResult({ result: "restart" });
   }
@@ -212,5 +245,5 @@ export function createTicTacToe(container, { mode, onResult }) {
   }
 
   draw();
-  return { destroy: () => {} };
+  return { destroy: () => { if (unsubNet) unsubNet(); } };
 }
