@@ -4,7 +4,7 @@
   "type": "portal",
   "position": { "x": 768, "y": 224 },
   "marker": { "x": 768, "y": 160 },
-  "sprite": "assets/objects/portals/portal_purple_locked.png",
+  "sprite": "assets/objects/portals/portal_echo_active.png",
   "width": 64,
   "height": 72,
   "collision": false,
@@ -12,7 +12,7 @@
   "interactable": true,
   "actionType": "portal",
   "targetMode": "bomberman_lite",
-  "locked": true,
+  "locked": false,
   "lockedMessage": "Портал пока нестабилен.",
   "description": "Bomberman Lite. Скоро."
 }

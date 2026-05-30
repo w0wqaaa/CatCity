@@ -2026,3 +2026,42 @@ button {
 .bs-target { cursor: crosshair; }
 .bs-target:hover { background: rgba(80,120,180,0.9); }
 .bs-controls { display: flex; gap: 8px; margin-top: 4px; }
+
+/* ═══════════════════════════════════════════
+   QUIZ (Викторина)
+   ═══════════════════════════════════════════ */
+.qz-root { width: 380px; max-width: calc(100vw - 40px); font-family: monospace; }
+.qz-head { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.qz-progress { font-size: 12px; color: #9988cc; }
+.qz-score { font-size: 13px; color: #88ffaa; font-weight: bold; }
+.qz-question {
+  font-size: 15px; color: #e0d4ff; line-height: 1.5; margin-bottom: 14px;
+  min-height: 44px; text-align: center;
+}
+.qz-options { display: flex; flex-direction: column; gap: 8px; }
+.qz-opt {
+  background: rgba(50,30,90,0.7); color: #d8c8ff;
+  border: 1px solid rgba(120,80,200,0.4); border-radius: 8px;
+  padding: 11px 14px; font-family: monospace; font-size: 14px;
+  cursor: pointer; text-align: left; transition: background 0.15s;
+}
+.qz-opt:hover:not(:disabled) { background: rgba(80,50,150,0.85); }
+.qz-opt:disabled { cursor: default; }
+.qz-correct { background: rgba(40,140,60,0.85) !important; color: #fff !important; border-color: #4c4 !important; }
+.qz-wrong   { background: rgba(160,40,40,0.85) !important; color: #fff !important; border-color: #c44 !important; }
+.qz-feedback { margin-top: 12px; text-align: center; font-size: 13px; }
+.qz-ok { color: #88ff99; font-weight: bold; }
+.qz-no { color: #ff8888; }
+.qz-result { text-align: center; padding: 16px; }
+.qz-result-icon { font-size: 48px; margin-bottom: 8px; }
+.qz-result-title { font-size: 18px; color: #cc99ff; font-weight: bold; margin-bottom: 6px; }
+.qz-result-gold { font-size: 16px; color: #ffdd55; margin-bottom: 16px; }
+
+/* ═══════════════════════════════════════════
+   BOMBERMAN
+   ═══════════════════════════════════════════ */
+.bm-root { display: flex; flex-direction: column; align-items: center; gap: 8px; font-family: monospace; }
+.bm-status { font-size: 14px; color: #ffdd55; font-weight: bold; min-height: 20px; text-align: center; }
+#bmCanvas { border-radius: 6px; border: 2px solid rgba(90,50,170,0.6); image-rendering: pixelated; }
+.bm-hint { font-size: 11px; color: #9988cc; }
+.bm-controls { display: flex; gap: 8px; }

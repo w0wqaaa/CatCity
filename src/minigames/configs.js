@@ -119,16 +119,33 @@ export const MINI_GAME_CONFIGS = {
     supportsPvP: false,
   },
   bomberman_lite: {
-    id: "bomberman_lite", name: "Взрывное измерение", emoji: "💣", status: "placeholder",
-    description: "Bomberman Lite. Будет добавлено позже.",
+    id: "bomberman_lite", name: "Взрывное измерение", emoji: "💣", status: "active",
+    description: "Bomberman Lite. Уничтожь всех врагов взрывами.",
+    rules: [
+      "WASD или стрелки — двигайся по клеткам.",
+      "Space — поставить бомбу (взрывается через 2 сек крестом).",
+      "Взрыв разрушает кирпичи и уничтожает врагов.",
+      "Не попади под собственный взрыв и не дай врагам тебя коснуться!",
+      "Уничтожь всех врагов. Награда: победа +8💰.",
+    ],
+    rewards:     { win: 8, draw: 0, lose: 0 },
+    supportsPvP: false,
   },
   mafia: {
     id: "mafia", name: "Измерение подозрений", emoji: "🕵️", status: "placeholder",
     description: "Мафия с ботами. Будет добавлено позже.",
   },
   quiz: {
-    id: "quiz", name: "Храм знаний", emoji: "❓", status: "placeholder",
-    description: "Викторина. Будет добавлено позже.",
+    id: "quiz", name: "Храм знаний", emoji: "❓", status: "active",
+    description: "Викторина на общие знания. 10 вопросов, по 1💰 за правильный ответ.",
+    rules: [
+      "10 случайных вопросов на общие темы.",
+      "У каждого вопроса 4 варианта — выбери правильный.",
+      "За каждый верный ответ +1💰.",
+      "Правильный ответ подсвечивается после выбора.",
+    ],
+    rewards:     { win: 0, draw: 0, lose: 0 },
+    supportsPvP: false,
   },
   capture_the_flag: {
     id: "capture_the_flag", name: "Арена флагов", emoji: "🚩", status: "placeholder",

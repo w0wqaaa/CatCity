@@ -119,8 +119,7 @@ export function createBattleship(container, { mode, onGoldChange, onResult } = {
     over = true;
     if (win) {
       message = "🏆 ПОБЕДА! Весь флот врага потоплен. +10 💰";
-      if (onGoldChange) onGoldChange(10);
-      if (onResult) onResult({ result: "win" });
+      if (onResult) onResult({ result: "win" }); // золото начислит manager (rewards.win)
     } else {
       message = "☠️ ПОРАЖЕНИЕ. Твой флот уничтожен.";
       if (onResult) onResult({ result: "lose" });
